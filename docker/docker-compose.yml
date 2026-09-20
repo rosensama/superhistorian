@@ -1,0 +1,19 @@
+# Reference copy of the Portainer stack. The live version is in Portainer's
+# stack editor; bump the image tag there after a release workflow finishes.
+#
+# Secrets come from the stack's "Environment variables" section in Portainer
+# (env_file doesn't work there: compose runs inside the Portainer container,
+# which can't see host paths; bind mounts are fine -- the daemon resolves them).
+services:
+  app:
+    image: ghcr.io/rosensama/superhistorian:v0.1.0
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      SITE_PASSWORD: ${SITE_PASSWORD}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-}
+      OPENROUTER_IMAGE_MODEL: ${OPENROUTER_IMAGE_MODEL:-}
+    volumes:
+      - /sites/superhistorian/data/images:/app/data/images

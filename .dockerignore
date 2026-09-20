@@ -1,0 +1,17 @@
+.next/
+node_modules/
+.git/
+.idea/
+.codegraph/
+.claude/
+.env
+.env.*
+data/
+coverage/
+playwright-report/
+test-results/
+src/__tests__/
+*.md
+.DS_Store
+.tsbuildinfo
+next-env.d.ts
