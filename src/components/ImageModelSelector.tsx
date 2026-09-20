@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useHistorianStore } from "@/lib/store";
+import { isOverride } from "@/lib/client-prefs";
+import { PrefOverrideCue, prefTriggerClass } from "./PrefOverrideCue";
 
 interface Model {
   id: string;
@@ -12,6 +14,9 @@ interface Model {
   completionPrice: string;
 }
 
+const TRIGGER_BASE =
+  "flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-sepia border border-sepia/30 rounded-lg hover:bg-sepia/10 transition-colors truncate max-w-[240px]";
+
 export default function ImageModelSelector() {
   const { selectedImageModel, setSelectedImageModel } = useHistorianStore();
   const [models, setModels] = useState<Model[]>([]);
@@ -19,6 +24,7 @@ export default function ImageModelSelector() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const overridden = isOverride("selectedImageModel", selectedImageModel);
 
   const fetchModels = async () => {
     if (models.length > 0) return;
@@ -58,16 +64,17 @@ export default function ImageModelSelector() {
     "Select image model";
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative inline-flex items-center gap-1" ref={dropdownRef}>
       <button
         onClick={handleToggle}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-sepia border border-sepia/30 rounded-lg hover:bg-sepia/10 transition-colors truncate max-w-[240px]"
+        className={prefTriggerClass(overridden, TRIGGER_BASE)}
         title={selectedImageModel}
       >
         <span className="text-xs">🎨</span>
         <span className="truncate">{displayName}</span>
         <span className="text-[10px] ml-1">{isOpen ? "▲" : "▼"}</span>
       </button>
+      <PrefOverrideCue prefKey="selectedImageModel" />
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-1 w-80 max-h-96 overflow-y-auto bg-white border border-sepia/20 rounded-xl shadow-xl z-50">

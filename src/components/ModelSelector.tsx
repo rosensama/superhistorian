@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useHistorianStore } from "@/lib/store";
+import { isOverride } from "@/lib/client-prefs";
+import { PrefOverrideCue, prefTriggerClass } from "./PrefOverrideCue";
 
 interface Model {
   id: string;
@@ -12,6 +14,9 @@ interface Model {
   completionPrice: string;
 }
 
+const TRIGGER_BASE =
+  "flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-sepia border border-sepia/30 rounded-lg hover:bg-sepia/10 transition-colors truncate max-w-[240px]";
+
 export default function ModelSelector() {
   const { selectedModel, setSelectedModel } = useHistorianStore();
   const [models, setModels] = useState<Model[]>([]);
@@ -19,8 +24,8 @@ export default function ModelSelector() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const overridden = isOverride("selectedModel", selectedModel);
 
-  // Fetch models on first open
   const fetchModels = async () => {
     if (models.length > 0) return;
     setIsLoading(true);
@@ -43,7 +48,6 @@ export default function ModelSelector() {
     if (next) fetchModels();
   };
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -54,34 +58,31 @@ export default function ModelSelector() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const displayName = models.find((m) => m.id === selectedModel)?.name || selectedModel.split("/").pop() || "Select model";
+  const displayName =
+    models.find((m) => m.id === selectedModel)?.name || selectedModel.split("/").pop() || "Select model";
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative inline-flex items-center gap-1" ref={dropdownRef}>
       <button
         onClick={handleToggle}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-sepia border border-sepia/30 rounded-lg hover:bg-sepia/10 transition-colors truncate max-w-[240px]"
+        className={prefTriggerClass(overridden, TRIGGER_BASE)}
         title={selectedModel}
       >
         <span className="text-xs">🤖</span>
         <span className="truncate">{displayName}</span>
         <span className="text-[10px] ml-1">{isOpen ? "▲" : "▼"}</span>
       </button>
+      <PrefOverrideCue prefKey="selectedModel" />
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-1 w-80 max-h-96 overflow-y-auto bg-white border border-sepia/20 rounded-xl shadow-xl z-50">
           {isLoading && (
-            <div className="p-4 text-center text-sm text-sepia/60 font-serif">
-              Loading models...
-            </div>
+            <div className="p-4 text-center text-sm text-sepia/60 font-serif">Loading models...</div>
           )}
           {error && (
-            <div className="p-4 text-center text-sm text-crimson font-serif">
-              {error}
-            </div>
+            <div className="p-4 text-center text-sm text-crimson font-serif">{error}</div>
           )}
           {(() => {
-            // Find max completion price across all models for the bar scale
             const maxPrice = Math.max(...models.map((m) => parseFloat(m.completionPrice) * 1e6), 0.01);
 
             return models.map((model) => {
@@ -101,14 +102,9 @@ export default function ModelSelector() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-serif text-sm text-ink font-medium truncate">
-                      {model.name}
-                    </span>
-                    {model.id === selectedModel && (
-                      <span className="text-xs text-navy">✓</span>
-                    )}
+                    <span className="font-serif text-sm text-ink font-medium truncate">{model.name}</span>
+                    {model.id === selectedModel && <span className="text-xs text-navy">✓</span>}
                   </div>
-                  {/* Price bar */}
                   <div className="mt-1.5 flex items-center gap-2">
                     <div className="flex-1 h-3 bg-sepia/5 rounded-full overflow-hidden">
                       <div

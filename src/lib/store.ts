@@ -3,6 +3,13 @@
 import { create } from "zustand";
 import { HistoryNode, DebugEntry } from "./types";
 import { normalizeTerm } from "./define-text";
+import {
+  CLIENT_PREF_DEFAULTS,
+  clearPref,
+  resolvePrefs,
+  setPref,
+  type ClientPrefKey,
+} from "./client-prefs";
 
 interface HistorianState {
   // The entire exploration tree
@@ -56,6 +63,8 @@ interface HistorianState {
   setSelectedModel: (model: string) => void;
   setSelectedImageModel: (model: string) => void;
   setSelectedLanguage: (lang: string) => void;
+  resetClientPref: (key: Exclude<ClientPrefKey, "turboMode">) => void;
+  hydrateClientPrefs: () => void;
   setGeneratedImage: (key: string, url: string) => void;
   clearGeneratedImage: (key: string) => void;
   setGeneratingImage: (key: string, generating: boolean) => void;
@@ -123,10 +132,10 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
   definitions: {},
   definitionLoading: {},
   searchNode: null,
-  selectedModel: "openai/gpt-5-nano",
-  selectedImageModel: "google/gemini-3.1-flash-image",
-  selectedLanguage: "English",
-  turboMode: true,
+  selectedModel: CLIENT_PREF_DEFAULTS.selectedModel,
+  selectedImageModel: CLIENT_PREF_DEFAULTS.selectedImageModel,
+  selectedLanguage: CLIENT_PREF_DEFAULTS.selectedLanguage,
+  turboMode: CLIENT_PREF_DEFAULTS.turboMode,
   lastSplitAxis: "time" as "time" | "geography",
   prefetchedSplits: {},
   prefetchingNodes: {},
@@ -209,9 +218,31 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
     })),
   setSearchNode: (searchNode) => set({ searchNode }),
   setTree: (node) => set({ tree: node, currentNode: node, currentPath: [node.id] }),
-  setSelectedModel: (selectedModel) => set({ selectedModel }),
-  setSelectedImageModel: (selectedImageModel) => set({ selectedImageModel }),
-  setSelectedLanguage: (selectedLanguage) => set({ selectedLanguage }),
+  setSelectedModel: (selectedModel) => {
+    setPref("selectedModel", selectedModel);
+    set({ selectedModel });
+  },
+  setSelectedImageModel: (selectedImageModel) => {
+    setPref("selectedImageModel", selectedImageModel);
+    set({ selectedImageModel });
+  },
+  setSelectedLanguage: (selectedLanguage) => {
+    setPref("selectedLanguage", selectedLanguage);
+    set({ selectedLanguage });
+  },
+  resetClientPref: (key) => {
+    clearPref(key);
+    set({ [key]: CLIENT_PREF_DEFAULTS[key] });
+  },
+  hydrateClientPrefs: () => {
+    const prefs = resolvePrefs();
+    set({
+      selectedModel: prefs.selectedModel,
+      selectedImageModel: prefs.selectedImageModel,
+      selectedLanguage: prefs.selectedLanguage,
+      turboMode: prefs.turboMode,
+    });
+  },
   setGeneratedImage: (key, url) =>
     set((state) => ({
       generatedImages: { ...state.generatedImages, [key]: url },
@@ -234,7 +265,12 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
       imageErrors: { ...state.imageErrors, [key]: error || (undefined as unknown as string) },
       generatingImages: { ...state.generatingImages, [key]: false },
     })),
-  toggleTurbo: () => set((state) => ({ turboMode: !state.turboMode })),
+  toggleTurbo: () =>
+    set((state) => {
+      const turboMode = !state.turboMode;
+      setPref("turboMode", turboMode);
+      return { turboMode };
+    }),
   setLastSplitAxis: (lastSplitAxis) => set({ lastSplitAxis }),
   setPrefetchedSplit: (nodeId, axis, nodes) =>
     set((state) => ({

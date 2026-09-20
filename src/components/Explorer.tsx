@@ -332,6 +332,7 @@ export default function Explorer() {
     toggleTurbo,
     showDebug,
     debugPanelHeight,
+    hydrateClientPrefs,
   } = useHistorianStore();
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -353,23 +354,25 @@ export default function Explorer() {
     return directCallController.current.signal;
   }, [cancelDirectCalls]);
 
-  // Auto-split root on first load using pre-generated data
+  // Hydrate prefs from localStorage, then auto-split root with effective language
   useEffect(() => {
-    if (tree.id === "root" && tree.children.length === 0) {
-      const lang = useHistorianStore.getState().selectedLanguage;
+    hydrateClientPrefs();
+    const state = useHistorianStore.getState();
+    if (state.tree.id === "root" && state.tree.children.length === 0) {
+      const lang = state.selectedLanguage;
       const phases = initialSplits[lang] || initialSplits["English"];
       const children: HistoryNode[] = phases.map((phase) => ({
         id: v4(),
         title: phase.title,
         summary: phase.summary,
         timeRange: { start: phase.start, end: phase.end },
-        geographicScope: tree.geographicScope,
-        parentId: tree.id,
+        geographicScope: state.tree.geographicScope,
+        parentId: state.tree.id,
         children: [],
         splitAxis: null,
         depth: 1,
       }));
-      setChildren(tree.id, children, "time");
+      setChildren(state.tree.id, children, "time");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
