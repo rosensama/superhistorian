@@ -15,9 +15,11 @@ import ImageModelSelector from "./ImageModelSelector";
 import LanguageSelector from "./LanguageSelector";
 import DebugPanel from "./DebugPanel";
 import DefinableText from "./DefinableText";
+import Link from "next/link";
 import { initialSplits } from "@/lib/initial-splits";
 import { prefetchForNode, cancelPrefetches } from "@/lib/prefetch";
 import { buildMapContext } from "@/lib/map-context";
+import { isPromptStyleOverride } from "@/lib/client-prefs";
 import { motion, AnimatePresence } from "framer-motion";
 
 // A single level in the vertical exploration thread
@@ -572,7 +574,15 @@ export default function Explorer() {
         const res = await fetch("/api/explore", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "essay", node: slimNode(node), model: store.selectedModel, language: store.selectedLanguage }),
+          body: JSON.stringify({
+            action: "essay",
+            node: slimNode(node),
+            model: store.selectedModel,
+            language: store.selectedLanguage,
+            ...(isPromptStyleOverride("essayStyle", store.essayStyle)
+              ? { essayStyle: store.essayStyle }
+              : {}),
+          }),
         });
         const data = await res.json();
         if (data.error) throw new Error(data.error);
@@ -624,6 +634,12 @@ export default function Explorer() {
               <ModelSelector />
               <ImageModelSelector />
               <LanguageSelector />
+              <Link
+                href="/prompts"
+                className="px-3 py-1.5 text-xs font-mono text-sepia border border-sepia/30 rounded-lg hover:bg-sepia/10 transition-colors"
+              >
+                Prompts
+              </Link>
               <button
                 onClick={toggleTurbo}
                 className={`px-3 py-1.5 text-xs font-mono rounded-lg border transition-colors ${

@@ -66,4 +66,6 @@ export type ExploreRequest = {
   context?: string;
   model?: string;
   language?: string;
+  essayStyle?: string;
+  defineStyle?: string;
 };

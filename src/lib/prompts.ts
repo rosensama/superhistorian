@@ -44,38 +44,79 @@ Provide:
 Respond in JSON: { "title", "start", "end", "geographicScope", "summary" }${langInstruction(language)}`;
 }
 
-export function buildEssayPrompt(node: HistoryNode, language: string = "English"): string {
-  return `You are writing a short encyclopedia article for intelligent, educated readers who already care about the topic. Be factual and dry. Prefer plain description over color.
-
-Topic: ${node.title}
-Time period: ${node.timeRange.start} to ${node.timeRange.end}
-Geographic scope: ${node.geographicScope}
-Context: ${node.summary}
+/** Editable instruction/style block for essays (scaffolding stays in code). */
+export const DEFAULT_ESSAY_STYLE = `You are writing a short encyclopedia article for intelligent, educated readers who already care about the topic. Be factual and dry. Prefer plain description over color.
 
 Write about 350 words. Include specific names, dates, places, and causal claims where known. State uncertainty when evidence is thin.
 
 Style rules:
 - Encyclopedia register: clear, precise, neutral — not literary, not persuasive.
-- Precise technical terms are welcome when they are the right word (e.g. orogen, thrust, exhumation). Do not water them down for a lay audience; readers can look up definitions.
+- Precise technical terms are welcome when they are the right word (e.g. orogen, satrapy, synoecism). Do not water them down for a lay audience; readers can look up definitions.
 - Do not spice it up, persuade, or try to be engaging or vivid.
 - No anthropomorphism (plates, oceans, empires, etc. do not have patience, silence, or intent).
 - No first person, imagined scenes, or "picture yourself" framing.
-- Avoid ornamental adjectives and metaphorical flourish; prefer concrete facts and processes.
+- Avoid ornamental adjectives and metaphorical flourish; prefer concrete facts and processes.`;
 
-Respond in JSON: { "essay": "..." }${langInstruction(language)}`;
+/** Editable instruction/style block for definitions. */
+export const DEFAULT_DEFINE_STYLE = `Define the selected word or phrase for an intelligent general reader. One or two short sentences. Plain language only — no jargon unless you immediately explain it.`;
+
+export const ESSAY_JSON_FOOTER = `Respond in JSON: { "essay": "..." }`;
+export const DEFINE_JSON_FOOTER = `Respond in JSON: { "definition": "..." }`;
+
+export function essayContextBlock(node: HistoryNode): string {
+  return `Topic: ${node.title}
+Time period: ${node.timeRange.start} to ${node.timeRange.end}
+Geographic scope: ${node.geographicScope}
+Context: ${node.summary}`;
+}
+
+export function defineContextBlock(term: string, context: string, topic: string): string {
+  return `Term: "${term}"
+Topic context: ${topic}
+Surrounding text: ${context.slice(0, 800)}`;
+}
+
+export function buildEssayPrompt(
+  node: HistoryNode,
+  language: string = "English",
+  style: string = DEFAULT_ESSAY_STYLE
+): string {
+  return `${style}
+
+${essayContextBlock(node)}
+
+${ESSAY_JSON_FOOTER}${langInstruction(language)}`;
 }
 
 export function buildDefinePrompt(
   term: string,
   context: string,
   topic: string,
-  language: string = "English"
+  language: string = "English",
+  style: string = DEFAULT_DEFINE_STYLE
 ): string {
-  return `Define the selected word or phrase for an intelligent general reader. One or two short sentences. Plain language only — no jargon unless you immediately explain it.
+  return `${style}
 
-Term: "${term}"
-Topic context: ${topic}
-Surrounding text: ${context.slice(0, 800)}
+${defineContextBlock(term, context, topic)}
 
-Respond in JSON: { "definition": "..." }${langInstruction(language)}`;
+${DEFINE_JSON_FOOTER}${langInstruction(language)}`;
 }
+
+/** Sample node for prompt preview when explorer has no useful current node. */
+export const SAMPLE_PROMPT_NODE: HistoryNode = {
+  id: "sample-prompt-node",
+  title: "The Age of Mammals",
+  summary:
+    "From the extinction of non-avian dinosaurs to the rise of human civilization — sixty-six million years of mammalian diversification.",
+  timeRange: { start: "66 million years ago", end: "Present" },
+  geographicScope: "Global",
+  parentId: null,
+  children: [],
+  splitAxis: null,
+  depth: 1,
+};
+
+export const SAMPLE_DEFINE_TERM = "orogen";
+export const SAMPLE_DEFINE_CONTEXT =
+  "The Himalayan orogen rose as the Indian Plate collided with Eurasia, driving crustal thickening and uplift.";
+export const SAMPLE_DEFINE_TOPIC = "The Age of Mammals";

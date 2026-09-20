@@ -99,14 +99,19 @@ export async function jumpToTopic(query: string, model?: string, language?: stri
   return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
 }
 
-export async function generateEssay(node: HistoryNode, model?: string, language?: string) {
+export async function generateEssay(
+  node: HistoryNode,
+  model?: string,
+  language?: string,
+  essayStyle?: string
+) {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 500 + Math.random() * 500));
     return { ...mockEssay(node), _debug: { prompt: "(mock mode)", model: "mock", usage: MOCK_USAGE } };
   }
 
   const { buildEssayPrompt } = await import("./prompts");
-  const prompt = buildEssayPrompt(node, language);
+  const prompt = buildEssayPrompt(node, language, essayStyle);
   const { content, usage, model: resolvedModel, cost } = await callOpenRouter(prompt, model);
   return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
 }
@@ -116,7 +121,8 @@ export async function generateDefinition(
   context: string,
   topic: string,
   model?: string,
-  language?: string
+  language?: string,
+  defineStyle?: string
 ) {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 200 + Math.random() * 200));
@@ -127,7 +133,7 @@ export async function generateDefinition(
   }
 
   const { buildDefinePrompt } = await import("./prompts");
-  const prompt = buildDefinePrompt(term, context, topic, language);
+  const prompt = buildDefinePrompt(term, context, topic, language, defineStyle);
   const { content, usage, model: resolvedModel, cost } = await callOpenRouter(prompt, model);
   return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
 }

@@ -6,9 +6,14 @@ import { normalizeTerm } from "./define-text";
 import {
   CLIENT_PREF_DEFAULTS,
   clearPref,
+  clearPromptStyle,
+  PROMPT_STYLE_DEFAULTS,
   resolvePrefs,
+  resolvePromptStyles,
   setPref,
+  setPromptStyle,
   type ClientPrefKey,
+  type PromptStyleKey,
 } from "./client-prefs";
 
 interface HistorianState {
@@ -32,6 +37,9 @@ interface HistorianState {
   selectedModel: string;
   selectedImageModel: string;
   selectedLanguage: string;
+  // Prompt style (effective; defaults from prompts.ts)
+  essayStyle: string;
+  defineStyle: string;
   // Turbo mode
   turboMode: boolean;
   lastSplitAxis: "time" | "geography";
@@ -64,6 +72,9 @@ interface HistorianState {
   setSelectedImageModel: (model: string) => void;
   setSelectedLanguage: (lang: string) => void;
   resetClientPref: (key: Exclude<ClientPrefKey, "turboMode">) => void;
+  setEssayStyle: (style: string) => void;
+  setDefineStyle: (style: string) => void;
+  resetPromptStyle: (key: PromptStyleKey) => void;
   hydrateClientPrefs: () => void;
   setGeneratedImage: (key: string, url: string) => void;
   clearGeneratedImage: (key: string) => void;
@@ -135,6 +146,8 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
   selectedModel: CLIENT_PREF_DEFAULTS.selectedModel,
   selectedImageModel: CLIENT_PREF_DEFAULTS.selectedImageModel,
   selectedLanguage: CLIENT_PREF_DEFAULTS.selectedLanguage,
+  essayStyle: PROMPT_STYLE_DEFAULTS.essayStyle,
+  defineStyle: PROMPT_STYLE_DEFAULTS.defineStyle,
   turboMode: CLIENT_PREF_DEFAULTS.turboMode,
   lastSplitAxis: "time" as "time" | "geography",
   prefetchedSplits: {},
@@ -234,13 +247,28 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
     clearPref(key);
     set({ [key]: CLIENT_PREF_DEFAULTS[key] });
   },
+  setEssayStyle: (essayStyle) => {
+    setPromptStyle("essayStyle", essayStyle);
+    set({ essayStyle });
+  },
+  setDefineStyle: (defineStyle) => {
+    setPromptStyle("defineStyle", defineStyle);
+    set({ defineStyle });
+  },
+  resetPromptStyle: (key) => {
+    clearPromptStyle(key);
+    set({ [key]: PROMPT_STYLE_DEFAULTS[key] });
+  },
   hydrateClientPrefs: () => {
     const prefs = resolvePrefs();
+    const styles = resolvePromptStyles();
     set({
       selectedModel: prefs.selectedModel,
       selectedImageModel: prefs.selectedImageModel,
       selectedLanguage: prefs.selectedLanguage,
       turboMode: prefs.turboMode,
+      essayStyle: styles.essayStyle,
+      defineStyle: styles.defineStyle,
     });
   },
   setGeneratedImage: (key, url) =>

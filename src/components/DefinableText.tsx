@@ -5,6 +5,7 @@ import { HistoryNode } from "@/lib/types";
 import { useHistorianStore } from "@/lib/store";
 import { slimNode } from "@/lib/slim-node";
 import { normalizeTerm, segmentDefinedTerms } from "@/lib/define-text";
+import { isPromptStyleOverride } from "@/lib/client-prefs";
 
 interface DefinableTextProps {
   text: string;
@@ -110,6 +111,9 @@ export default function DefinableText({ text, node, className }: DefinableTextPr
           node: slimNode(node),
           model: store.selectedModel,
           language: store.selectedLanguage,
+          ...(isPromptStyleOverride("defineStyle", store.defineStyle)
+            ? { defineStyle: store.defineStyle }
+            : {}),
         }),
       });
       const data = await res.json();

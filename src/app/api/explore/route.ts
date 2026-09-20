@@ -4,6 +4,15 @@ import { splitByTime, splitByGeo, jumpToTopic, generateEssay, generateDefinition
 import { isDbAvailable } from "@/lib/db/client";
 import { logUsage } from "@/lib/db/usage";
 
+const MAX_STYLE_CHARS = 16_384;
+
+function sanitizeStyle(style: string | undefined): string | undefined | { error: string } {
+  if (style === undefined || style === null) return undefined;
+  if (typeof style !== "string") return { error: "Style must be a string" };
+  if (style.length > MAX_STYLE_CHARS) return { error: `Style exceeds ${MAX_STYLE_CHARS} characters` };
+  return style;
+}
+
 // Best-effort DB persistence — doesn't block the response
 async function persistUsage(debug: { model: string; usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number }; cost?: number }, action: string, nodeId?: string) {
   try {
@@ -52,7 +61,11 @@ export async function POST(req: NextRequest) {
       }
       case "essay": {
         if (!body.node) return NextResponse.json({ error: "Node required" }, { status: 400 });
-        const result = await generateEssay(body.node, model, language);
+        const essayStyle = sanitizeStyle(body.essayStyle);
+        if (essayStyle && typeof essayStyle === "object") {
+          return NextResponse.json({ error: essayStyle.error }, { status: 400 });
+        }
+        const result = await generateEssay(body.node, model, language, essayStyle);
         persistUsage(result._debug, "essay", body.node.id);
         // Persist essay to node if DB available
         persistEssay(body.node.id, result.essay, result._debug);
@@ -60,13 +73,18 @@ export async function POST(req: NextRequest) {
       }
       case "define": {
         if (!body.term?.trim()) return NextResponse.json({ error: "Term required" }, { status: 400 });
+        const defineStyle = sanitizeStyle(body.defineStyle);
+        if (defineStyle && typeof defineStyle === "object") {
+          return NextResponse.json({ error: defineStyle.error }, { status: 400 });
+        }
         const topic = body.node?.title || body.query || "history";
         const result = await generateDefinition(
           body.term.trim(),
           body.context || "",
           topic,
           model,
-          language
+          language,
+          defineStyle
         );
         persistUsage(result._debug, "define", body.node?.id);
         return NextResponse.json(result);
