@@ -110,3 +110,24 @@ export async function generateEssay(node: HistoryNode, model?: string, language?
   const { content, usage, model: resolvedModel, cost } = await callOpenRouter(prompt, model);
   return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
 }
+
+export async function generateDefinition(
+  term: string,
+  context: string,
+  topic: string,
+  model?: string,
+  language?: string
+) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 200 + Math.random() * 200));
+    return {
+      definition: `"${term}" — (mock) a term used in the context of ${topic}.`,
+      _debug: { prompt: "(mock mode)", model: "mock", usage: MOCK_USAGE },
+    };
+  }
+
+  const { buildDefinePrompt } = await import("./prompts");
+  const prompt = buildDefinePrompt(term, context, topic, language);
+  const { content, usage, model: resolvedModel, cost } = await callOpenRouter(prompt, model);
+  return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
+}

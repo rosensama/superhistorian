@@ -5,6 +5,7 @@ import { HistoryNode } from "@/lib/types";
 import { useHistorianStore } from "@/lib/store";
 import { generateImage } from "./ImagePlaceholder";
 import ImageLightbox from "./ImageLightbox";
+import DefinableText from "./DefinableText";
 import { motion } from "framer-motion";
 import { buildMapContext } from "@/lib/map-context";
 
@@ -149,9 +150,11 @@ export default function NodeCard({ node, index, onSplitTime, onSplitGeo, onDrill
         </div>
 
         {/* Summary */}
-        <p className="text-xs text-ink/60 font-serif leading-relaxed line-clamp-3 mb-3">
-          {node.summary}
-        </p>
+        <DefinableText
+          text={node.summary}
+          node={node}
+          className="text-xs text-ink/60 font-serif leading-relaxed line-clamp-3 mb-3"
+        />
 
         {/* Thumbnails (image + map) */}
         {(existingImage || existingMap) && (

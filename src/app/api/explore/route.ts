@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ExploreRequest } from "@/lib/types";
-import { splitByTime, splitByGeo, jumpToTopic, generateEssay } from "@/lib/openrouter";
+import { splitByTime, splitByGeo, jumpToTopic, generateEssay, generateDefinition } from "@/lib/openrouter";
 import { isDbAvailable } from "@/lib/db/client";
 import { logUsage } from "@/lib/db/usage";
 
@@ -56,6 +56,19 @@ export async function POST(req: NextRequest) {
         persistUsage(result._debug, "essay", body.node.id);
         // Persist essay to node if DB available
         persistEssay(body.node.id, result.essay, result._debug);
+        return NextResponse.json(result);
+      }
+      case "define": {
+        if (!body.term?.trim()) return NextResponse.json({ error: "Term required" }, { status: 400 });
+        const topic = body.node?.title || body.query || "history";
+        const result = await generateDefinition(
+          body.term.trim(),
+          body.context || "",
+          topic,
+          model,
+          language
+        );
+        persistUsage(result._debug, "define", body.node?.id);
         return NextResponse.json(result);
       }
       default:

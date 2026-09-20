@@ -41,6 +41,10 @@ export interface EssayResponse {
   essay: string;
 }
 
+export interface DefineResponse {
+  definition: string;
+}
+
 export interface DebugEntry {
   id: string;
   timestamp: number;
@@ -55,9 +59,11 @@ export interface DebugEntry {
 }
 
 export type ExploreRequest = {
-  action: "split-time" | "split-geography" | "jump-to-topic" | "essay";
+  action: "split-time" | "split-geography" | "jump-to-topic" | "essay" | "define";
   node?: HistoryNode;
   query?: string;
+  term?: string;
+  context?: string;
   model?: string;
   language?: string;
 };

@@ -55,11 +55,27 @@ Context: ${node.summary}
 Write about 350 words. Include specific names, dates, places, and causal claims where known. State uncertainty when evidence is thin.
 
 Style rules:
-- Encyclopedia register: clear, precise, neutral. Not academic jargon-heavy, but not literary.
+- Encyclopedia register: clear, precise, neutral — not literary, not persuasive.
+- Precise technical terms are welcome when they are the right word (e.g. orogen, thrust, exhumation). Do not water them down for a lay audience; readers can look up definitions.
 - Do not spice it up, persuade, or try to be engaging or vivid.
 - No anthropomorphism (plates, oceans, empires, etc. do not have patience, silence, or intent).
 - No first person, imagined scenes, or "picture yourself" framing.
 - Avoid ornamental adjectives and metaphorical flourish; prefer concrete facts and processes.
 
 Respond in JSON: { "essay": "..." }${langInstruction(language)}`;
+}
+
+export function buildDefinePrompt(
+  term: string,
+  context: string,
+  topic: string,
+  language: string = "English"
+): string {
+  return `Define the selected word or phrase for an intelligent general reader. One or two short sentences. Plain language only — no jargon unless you immediately explain it.
+
+Term: "${term}"
+Topic context: ${topic}
+Surrounding text: ${context.slice(0, 800)}
+
+Respond in JSON: { "definition": "..." }${langInstruction(language)}`;
 }

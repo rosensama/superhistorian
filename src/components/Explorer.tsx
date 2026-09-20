@@ -14,6 +14,7 @@ import ModelSelector from "./ModelSelector";
 import ImageModelSelector from "./ImageModelSelector";
 import LanguageSelector from "./LanguageSelector";
 import DebugPanel from "./DebugPanel";
+import DefinableText from "./DefinableText";
 import { initialSplits } from "@/lib/initial-splits";
 import { prefetchForNode, cancelPrefetches } from "@/lib/prefetch";
 import { buildMapContext } from "@/lib/map-context";
@@ -163,16 +164,20 @@ function ExplorationLevel({
                 </h2>
 
                 {/* Summary */}
-                <p className="font-serif text-sm text-ink/80 leading-relaxed">
-                  {node.summary}
-                </p>
+                <DefinableText
+                  text={node.summary}
+                  node={node}
+                  className="font-serif text-sm text-ink/80 leading-relaxed"
+                />
 
-                {/* Essay (inline) */}
+                {/* Essay (inline) — select a phrase to define */}
                 {essayText && (
                   <div className="mt-4 pt-4 border-t border-sepia/15">
-                    <div className="font-serif text-sm text-ink/85 leading-relaxed whitespace-pre-line first-letter:text-4xl first-letter:font-display first-letter:text-sepia first-letter:float-left first-letter:mr-2 first-letter:mt-0.5">
-                      {essayText}
-                    </div>
+                    <DefinableText
+                      text={essayText}
+                      node={node}
+                      className="font-serif text-sm text-ink/85 leading-relaxed whitespace-pre-wrap first-letter:text-4xl first-letter:font-display first-letter:text-sepia first-letter:float-left first-letter:mr-2 first-letter:mt-0.5"
+                    />
                   </div>
                 )}
                 {essayIsLoading && (
@@ -666,9 +671,11 @@ export default function Explorer() {
             <h2 className="font-display text-3xl font-bold text-ink mb-4">
               {tree.title}
             </h2>
-            <p className="font-serif text-ink/70 max-w-lg mb-8 text-lg leading-relaxed">
-              {tree.summary}
-            </p>
+            <DefinableText
+              text={tree.summary}
+              node={tree}
+              className="font-serif text-ink/70 max-w-lg mb-8 text-lg leading-relaxed"
+            />
             <button
               onClick={() => handleSplitTime(tree)}
               className="px-8 py-4 bg-navy text-white font-display text-lg rounded-2xl hover:bg-navy/80 transition-all hover:scale-105 shadow-lg"

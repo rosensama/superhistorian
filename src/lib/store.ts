@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { HistoryNode, DebugEntry } from "./types";
+import { normalizeTerm } from "./define-text";
 
 interface HistorianState {
   // The entire exploration tree
@@ -15,6 +16,9 @@ interface HistorianState {
   // Essay state (per-node)
   essays: Record<string, string>;       // nodeId → essay text
   essayLoading: Record<string, boolean>; // nodeId → loading
+  // Definitions for selected phrases (per-node, survives while session/content in memory)
+  definitions: Record<string, Record<string, { term: string; definition: string }>>; // nodeId → normTerm → def
+  definitionLoading: Record<string, boolean>; // `${nodeId}::${normTerm}` → loading
   // Search state
   searchNode: HistoryNode | null;
   // Model selection
@@ -45,6 +49,8 @@ interface HistorianState {
   setLoading: (loading: boolean) => void;
   setEssay: (nodeId: string, essay: string | null) => void;
   setEssayLoading: (nodeId: string, loading: boolean) => void;
+  setDefinition: (nodeId: string, term: string, definition: string) => void;
+  setDefinitionLoading: (nodeId: string, normTerm: string, loading: boolean) => void;
   setSearchNode: (node: HistoryNode | null) => void;
   setTree: (node: HistoryNode) => void;
   setSelectedModel: (model: string) => void;
@@ -114,6 +120,8 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
   isLoading: false,
   essays: {},
   essayLoading: {},
+  definitions: {},
+  definitionLoading: {},
   searchNode: null,
   selectedModel: "openai/gpt-5-nano",
   selectedImageModel: "openai/gpt-5-image-mini",
@@ -178,6 +186,26 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
   setEssayLoading: (nodeId, loading) =>
     set((state) => ({
       essayLoading: { ...state.essayLoading, [nodeId]: loading },
+    })),
+  setDefinition: (nodeId, term, definition) => {
+    const norm = normalizeTerm(term);
+    if (!norm) return;
+    set((state) => ({
+      definitions: {
+        ...state.definitions,
+        [nodeId]: {
+          ...state.definitions[nodeId],
+          [norm]: { term: term.trim().replace(/\s+/g, " "), definition },
+        },
+      },
+    }));
+  },
+  setDefinitionLoading: (nodeId, normTerm, loading) =>
+    set((state) => ({
+      definitionLoading: {
+        ...state.definitionLoading,
+        [`${nodeId}::${normTerm}`]: loading,
+      },
     })),
   setSearchNode: (searchNode) => set({ searchNode }),
   setTree: (node) => set({ tree: node, currentNode: node, currentPath: [node.id] }),

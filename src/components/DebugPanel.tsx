@@ -11,6 +11,7 @@ const ACTION_STYLES: Record<string, { bg: string; text: string; barColor: string
   "split-geography":           { bg: "bg-orange-600", text: "text-orange-100", barColor: "from-orange-500/50 to-orange-400/30", label: "GEO" },
   "jump-to-topic":             { bg: "bg-green-600",  text: "text-green-100",  barColor: "from-green-500/50 to-green-400/30",   label: "SEARCH" },
   "essay":                     { bg: "bg-yellow-600", text: "text-yellow-100", barColor: "from-yellow-500/50 to-yellow-400/30", label: "ESSAY" },
+  "define":                    { bg: "bg-teal-700",   text: "text-teal-100",   barColor: "from-teal-500/50 to-teal-400/30",     label: "DEFINE" },
   "generate-image":            { bg: "bg-purple-600", text: "text-purple-100", barColor: "from-purple-500/50 to-purple-400/30", label: "IMAGE" },
   "prefetch-split-time":       { bg: "bg-blue-800",   text: "text-blue-200",   barColor: "from-blue-600/40 to-blue-500/20",     label: "PRE-TIME" },
   "prefetch-split-geography":  { bg: "bg-orange-800", text: "text-orange-200", barColor: "from-orange-600/40 to-orange-500/20", label: "PRE-GEO" },
