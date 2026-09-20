@@ -102,7 +102,7 @@ All configuration is done through `.env.local`:
 | `OPENROUTER_API_KEY` | (required) | Your OpenRouter API key |
 | `SITE_PASSWORD` | (required) | Shared password; unset = site locked. Rotate to kick everyone. |
 | `OPENROUTER_MODEL` | `openai/gpt-5-nano` | Default text model |
-| `OPENROUTER_IMAGE_MODEL` | `openai/gpt-5-image-mini` | Default image model |
+| `OPENROUTER_IMAGE_MODEL` | `google/gemini-3.1-flash-image` | Default image model (Nano Banana 2) |
 | `SURREAL_URL` | `http://127.0.0.1:8000` | SurrealDB connection URL |
 | `SURREAL_USER` | `root` | SurrealDB username |
 | `SURREAL_PASS` | `root` | SurrealDB password |

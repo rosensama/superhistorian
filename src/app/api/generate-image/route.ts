@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Context required" }, { status: 400 });
     }
 
-    const imageModel = model || process.env.OPENROUTER_IMAGE_MODEL || "openai/gpt-5-image-mini";
+    const imageModel = model || process.env.OPENROUTER_IMAGE_MODEL || "google/gemini-3.1-flash-image";
 
     const prompt = `Create a vivid, historically accurate illustration for the following historical context. The image should look like a high-quality textbook illustration or historical painting. No text or labels in the image.
 
