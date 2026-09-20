@@ -45,15 +45,20 @@ cd superhistorian
 npm install
 ```
 
-### 3. Set up your API key
+### 3. Set up environment
 
 Create a `.env.local` file in the project root:
 
 ```bash
-echo "OPENROUTER_API_KEY=sk-or-v1-your-key-here" > .env.local
+cat > .env.local <<'EOF'
+OPENROUTER_API_KEY=sk-or-v1-your-key-here
+SITE_PASSWORD=pick-a-shared-password
+EOF
 ```
 
-Get your key at [openrouter.ai/keys](https://openrouter.ai/keys).
+Get your OpenRouter key at [openrouter.ai/keys](https://openrouter.ai/keys).
+
+`SITE_PASSWORD` gates the whole app (page + API). If it is unset, the site stays **locked**. Share the password with people you trust; changing it invalidates existing sessions.
 
 ### 4. Start the dev server
 
@@ -61,9 +66,9 @@ Get your key at [openrouter.ai/keys](https://openrouter.ai/keys).
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000), enter the site password, then explore.
 
-That's it. The app works immediately with the default model (`openai/gpt-5-nano`). No database setup required -- persistence is optional.
+The app works with the default model (`openai/gpt-5-nano`). No database setup required -- persistence is optional.
 
 ## Optional: Persistence with SurrealDB
 
@@ -95,6 +100,7 @@ All configuration is done through `.env.local`:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OPENROUTER_API_KEY` | (required) | Your OpenRouter API key |
+| `SITE_PASSWORD` | (required) | Shared password; unset = site locked. Rotate to kick everyone. |
 | `OPENROUTER_MODEL` | `openai/gpt-5-nano` | Default text model |
 | `OPENROUTER_IMAGE_MODEL` | `openai/gpt-5-image-mini` | Default image model |
 | `SURREAL_URL` | `http://127.0.0.1:8000` | SurrealDB connection URL |
