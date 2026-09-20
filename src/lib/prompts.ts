@@ -45,14 +45,21 @@ Respond in JSON: { "title", "start", "end", "geographicScope", "summary" }${lang
 }
 
 export function buildEssayPrompt(node: HistoryNode, language: string = "English"): string {
-  return `You are a brilliant, engaging historian and writer. Write a 350-word essay about the following topic. Make it vivid, insightful, and compelling — the kind of essay that makes the reader feel like they were there.
+  return `You are writing a short encyclopedia article for intelligent, educated readers who already care about the topic. Be factual and dry. Prefer plain description over color.
 
 Topic: ${node.title}
 Time period: ${node.timeRange.start} to ${node.timeRange.end}
 Geographic scope: ${node.geographicScope}
 Context: ${node.summary}
 
-Write exactly 350 words. Be specific with names, dates, and details. Make it narrative and engaging.
+Write about 350 words. Include specific names, dates, places, and causal claims where known. State uncertainty when evidence is thin.
+
+Style rules:
+- Encyclopedia register: clear, precise, neutral. Not academic jargon-heavy, but not literary.
+- Do not spice it up, persuade, or try to be engaging or vivid.
+- No anthropomorphism (plates, oceans, empires, etc. do not have patience, silence, or intent).
+- No first person, imagined scenes, or "picture yourself" framing.
+- Avoid ornamental adjectives and metaphorical flourish; prefer concrete facts and processes.
 
 Respond in JSON: { "essay": "..." }${langInstruction(language)}`;
 }
