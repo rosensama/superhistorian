@@ -12,6 +12,7 @@ interface NodeGridProps {
   onSplitGeo: (node: HistoryNode) => void;
   onDrillDown: (node: HistoryNode) => void;
   onEssay: (node: HistoryNode) => void;
+  onEnsureSelected: (node: HistoryNode) => void;
   isLoading: boolean;
   splitAxis: "time" | "geography" | null;
   selectedChildId?: string | null;
@@ -19,7 +20,7 @@ interface NodeGridProps {
   label?: string;
 }
 
-export default function NodeGrid({ nodes, onSplitTime, onSplitGeo, onDrillDown, onEssay, isLoading, splitAxis, selectedChildId, horizontal, label }: NodeGridProps) {
+export default function NodeGrid({ nodes, onSplitTime, onSplitGeo, onDrillDown, onEssay, onEnsureSelected, isLoading, splitAxis, selectedChildId, horizontal, label }: NodeGridProps) {
   const generatedImages = useHistorianStore((s) => s.generatedImages);
   const generatingImages = useHistorianStore((s) => s.generatingImages);
 
@@ -85,6 +86,7 @@ export default function NodeGrid({ nodes, onSplitTime, onSplitGeo, onDrillDown, 
                 onSplitGeo={onSplitGeo}
                 onDrillDown={onDrillDown}
                 onEssay={onEssay}
+                onEnsureSelected={onEnsureSelected}
                 isLoading={isLoading}
                 isSelected={node.id === selectedChildId}
               />

@@ -5,6 +5,7 @@ import { useHistorianStore } from "@/lib/store";
 import { HistoryNode } from "@/lib/types";
 import { v4 } from "@/lib/uuid";
 import { slimNode } from "@/lib/slim-node";
+import { needsExpandForAction } from "@/lib/path";
 import SearchBar from "./SearchBar";
 import NodeGrid from "./NodeGrid";
 import LoadingSkeleton from "./LoadingSkeleton";
@@ -27,6 +28,7 @@ function ExplorationLevel({
   onSplitGeo,
   onSelectChild,
   onEssay,
+  onEnsureSelected,
   isLoading,
   isDeepest,
 }: {
@@ -37,6 +39,7 @@ function ExplorationLevel({
   onSplitGeo: (node: HistoryNode) => void;
   onSelectChild: (node: HistoryNode) => void;
   onEssay: (node: HistoryNode) => void;
+  onEnsureSelected: (node: HistoryNode) => void;
   isLoading: boolean;
   isDeepest: boolean;
 }) {
@@ -247,6 +250,7 @@ function ExplorationLevel({
             onSplitGeo={onSplitGeo}
             onDrillDown={onSelectChild}
             onEssay={onEssay}
+            onEnsureSelected={onEnsureSelected}
             isLoading={isLoading}
             splitAxis={node.splitAxis}
             selectedChildId={selectedChildId}
@@ -278,6 +282,7 @@ function ExplorationLevel({
                     onSplitGeo={onSplitGeo}
                     onDrillDown={onSelectChild}
                     onEssay={onEssay}
+                    onEnsureSelected={onEnsureSelected}
                     isLoading={isLoading}
                     splitAxis={splitAxis}
                     horizontal
@@ -369,8 +374,52 @@ export default function Explorer() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [currentPath]);
 
+  const handleSelectChild = useCallback(
+    (childNode: HistoryNode) => {
+      // Cancel ALL in-flight work — both prefetches and direct API calls
+      cancelPrefetches(new Set([childNode.id]));
+      cancelDirectCalls();
+
+      // If this child is from a prefetched result (not yet in the tree),
+      // we need to commit the prefetched split to the tree first
+      const existingNode = findNode(childNode.id);
+      if (!existingNode && childNode.parentId) {
+        // This is a prefetched card — figure out which axis it came from
+        const prefetched = useHistorianStore.getState().prefetchedSplits[childNode.parentId];
+        if (prefetched) {
+          const isTimeSplit = prefetched.time?.some((n) => n.id === childNode.id);
+          const isGeoSplit = prefetched.geo?.some((n) => n.id === childNode.id);
+          const axis = isTimeSplit ? "time" : isGeoSplit ? "geography" : null;
+          const nodes = isTimeSplit ? prefetched.time : isGeoSplit ? prefetched.geo : null;
+          if (axis && nodes) {
+            setChildren(childNode.parentId, nodes, axis);
+            // Remember which axis the user preferred
+            useHistorianStore.getState().setLastSplitAxis(axis);
+          }
+        }
+      }
+      navigateTo(childNode.id);
+    },
+    [navigateTo, findNode, setChildren, cancelDirectCalls]
+  );
+
+  // Select (and commit prefetch into the tree) before card actions whose UI
+  // lives on the expanded path node — or that call setChildren/navigateTo.
+  const ensureNodeSelected = useCallback(
+    (node: HistoryNode) => {
+      if (needsExpandForAction(node.id, useHistorianStore.getState().currentPath)) {
+        handleSelectChild(node);
+      }
+    },
+    [handleSelectChild]
+  );
+
   const handleSplitTime = useCallback(
     async (node: HistoryNode) => {
+      ensureNodeSelected(node);
+      // Re-read after possible prefetch commit
+      node = useHistorianStore.getState().findNode(node.id) || node;
+
       if (node.children.length > 0 && node.splitAxis === "time") {
         navigateTo(node.id);
         return;
@@ -432,11 +481,14 @@ export default function Explorer() {
         setLoading(false);
       }
     },
-    [setLoading, setChildren, navigateTo, turboMode, newDirectSignal]
+    [setLoading, setChildren, navigateTo, turboMode, newDirectSignal, ensureNodeSelected]
   );
 
   const handleSplitGeo = useCallback(
     async (node: HistoryNode) => {
+      ensureNodeSelected(node);
+      node = useHistorianStore.getState().findNode(node.id) || node;
+
       if (node.children.length > 0 && node.splitAxis === "geography") {
         navigateTo(node.id);
         return;
@@ -497,40 +549,13 @@ export default function Explorer() {
         setLoading(false);
       }
     },
-    [setLoading, setChildren, navigateTo, turboMode, newDirectSignal]
-  );
-
-  const handleSelectChild = useCallback(
-    (childNode: HistoryNode) => {
-      // Cancel ALL in-flight work — both prefetches and direct API calls
-      cancelPrefetches(new Set([childNode.id]));
-      cancelDirectCalls();
-
-      // If this child is from a prefetched result (not yet in the tree),
-      // we need to commit the prefetched split to the tree first
-      const existingNode = findNode(childNode.id);
-      if (!existingNode && childNode.parentId) {
-        // This is a prefetched card — figure out which axis it came from
-        const prefetched = useHistorianStore.getState().prefetchedSplits[childNode.parentId];
-        if (prefetched) {
-          const isTimeSplit = prefetched.time?.some((n) => n.id === childNode.id);
-          const isGeoSplit = prefetched.geo?.some((n) => n.id === childNode.id);
-          const axis = isTimeSplit ? "time" : isGeoSplit ? "geography" : null;
-          const nodes = isTimeSplit ? prefetched.time : isGeoSplit ? prefetched.geo : null;
-          if (axis && nodes) {
-            setChildren(childNode.parentId, nodes, axis);
-            // Remember which axis the user preferred
-            useHistorianStore.getState().setLastSplitAxis(axis);
-          }
-        }
-      }
-      navigateTo(childNode.id);
-    },
-    [navigateTo, findNode, setChildren, cancelDirectCalls]
+    [setLoading, setChildren, navigateTo, turboMode, newDirectSignal, ensureNodeSelected]
   );
 
   const handleEssay = useCallback(
     async (node: HistoryNode) => {
+      ensureNodeSelected(node);
+
       const store = useHistorianStore.getState();
       if (store.essays[node.id] || store.essayLoading[node.id]) return;
       store.setEssayLoading(node.id, true);
@@ -554,7 +579,7 @@ export default function Explorer() {
         useHistorianStore.getState().setEssayLoading(node.id, false);
       }
     },
-    []
+    [ensureNodeSelected]
   );
 
   // Build the vertical thread: walk the currentPath and resolve each node
@@ -670,6 +695,7 @@ export default function Explorer() {
               onSplitGeo={handleSplitGeo}
               onSelectChild={handleSelectChild}
               onEssay={handleEssay}
+              onEnsureSelected={ensureNodeSelected}
               isLoading={isLoading}
               isDeepest={isDeepest}
             />

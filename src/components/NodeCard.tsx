@@ -15,6 +15,7 @@ interface NodeCardProps {
   onSplitGeo: (node: HistoryNode) => void;
   onDrillDown: (node: HistoryNode) => void;
   onEssay: (node: HistoryNode) => void;
+  onEnsureSelected: (node: HistoryNode) => void;
   isLoading: boolean;
   isSelected?: boolean;
 }
@@ -35,7 +36,7 @@ const SELECTED_COLORS = [
   "from-rose-100 to-pink-100 border-rose-500",
 ];
 
-export default function NodeCard({ node, index, onSplitTime, onSplitGeo, onDrillDown, onEssay, isLoading, isSelected }: NodeCardProps) {
+export default function NodeCard({ node, index, onSplitTime, onSplitGeo, onDrillDown, onEssay, onEnsureSelected, isLoading, isSelected }: NodeCardProps) {
   const colorClass = isSelected
     ? SELECTED_COLORS[index % SELECTED_COLORS.length]
     : CARD_COLORS[index % CARD_COLORS.length];
@@ -192,38 +193,38 @@ export default function NodeCard({ node, index, onSplitTime, onSplitGeo, onDrill
           </div>
         )}
 
-        {/* Action button grid */}
+        {/* Action button grid — ensure selected so results show on expanded header / tree */}
         <div className="grid grid-cols-3 gap-1.5 mt-auto">
           <button
-            onClick={(e) => { e.stopPropagation(); onSplitTime(node); }}
+            onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); onSplitTime(node); }}
             disabled={isLoading}
             className="px-2 py-1.5 bg-navy text-white text-[11px] font-semibold rounded-lg hover:bg-navy/80 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
           >
             ⏳ Time
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onSplitGeo(node); }}
+            onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); onSplitGeo(node); }}
             disabled={isLoading}
             className="px-2 py-1.5 bg-crimson text-white text-[11px] font-semibold rounded-lg hover:bg-crimson/80 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
           >
             🗺️ Geo
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onEssay(node); }}
+            onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); onEssay(node); }}
             disabled={isLoading}
             className="px-2 py-1.5 bg-sepia text-parchment text-[11px] font-semibold rounded-lg hover:bg-brass transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
           >
             📝 Essay
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); generateImage(`node-${node.id}`, imageContext); }}
+            onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); generateImage(`node-${node.id}`, imageContext); }}
             disabled={isLoading || isGeneratingImage}
             className="px-2 py-1.5 bg-violet-600 text-white text-[11px] font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
           >
             {isGeneratingImage ? "🎨 ..." : existingImage ? "🎨 Redo" : "🎨 Image"}
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); generateImage(`map-${node.id}`, mapContext); }}
+            onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); generateImage(`map-${node.id}`, mapContext); }}
             disabled={isLoading || isGeneratingMap}
             className="px-2 py-1.5 bg-teal-700 text-white text-[11px] font-semibold rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
           >
