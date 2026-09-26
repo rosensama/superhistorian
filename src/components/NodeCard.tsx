@@ -165,6 +165,7 @@ export default function NodeCard({ node, index, onSplitTime, onSplitGeo, onDrill
                   className="rounded-lg overflow-hidden border border-sepia/15 cursor-zoom-in"
                   onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- generated data URLs; next/image optimization does not apply */}
                   <img src={existingImage} alt={node.title} className="w-full h-auto" />
                 </div>
                 <button
@@ -182,6 +183,7 @@ export default function NodeCard({ node, index, onSplitTime, onSplitGeo, onDrill
                   className="rounded-lg overflow-hidden border border-sepia/15 cursor-zoom-in"
                   onClick={(e) => { e.stopPropagation(); setMapLightboxOpen(true); }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- generated data URLs; next/image optimization does not apply */}
                   <img src={existingMap} alt={`Map: ${node.title}`} className="w-full h-auto" />
                 </div>
                 <button

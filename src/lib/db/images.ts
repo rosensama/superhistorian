@@ -26,8 +26,7 @@ export async function saveImage(
   const buffer = Buffer.from(base64Data, "base64");
 
   // Determine extension from the data URL
-  const extMatch = base64DataUrl.match(/^data:image\/(\w+);/);
-  const ext = extMatch ? extMatch[1] : "png";
+  const ext = /^data:image\/(\w+);/.exec(base64DataUrl)?.[1] ?? "png";
 
   const filename = `${nodeId}.${ext}`;
   const filepath = path.join(IMAGE_DIR, filename);

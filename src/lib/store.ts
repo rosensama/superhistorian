@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { HistoryNode, DebugEntry } from "./types";
 import { normalizeTerm } from "./define-text";
+import { omitKey } from "./omit-key";
 import {
   CLIENT_PREF_DEFAULTS,
   clearPref,
@@ -167,7 +168,7 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
         children,
         splitAxis,
       }));
-      const currentNode = findNodeInTree(newTree, state.currentNode.id) || newTree;
+      const currentNode = findNodeInTree(newTree, state.currentNode.id) ?? newTree;
       return { tree: newTree, currentNode };
     });
   },
@@ -183,7 +184,8 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
 
   navigateToPath: (path) => {
     const state = get();
-    const nodeId = path[path.length - 1];
+    const nodeId = path.at(-1);
+    if (!nodeId) return;
     const node = findNodeInTree(state.tree, nodeId);
     if (!node) return;
     set({ currentNode: node, currentPath: path });
@@ -193,8 +195,8 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
     const state = get();
     if (state.currentPath.length <= 1) return;
     const parentPath = state.currentPath.slice(0, -1);
-    const parentId = parentPath[parentPath.length - 1];
-    const parent = findNodeInTree(state.tree, parentId);
+    const parentId = parentPath.at(-1);
+    const parent = parentId ? findNodeInTree(state.tree, parentId) : null;
     if (parent) {
       set({ currentNode: parent, currentPath: parentPath });
     }
@@ -278,11 +280,7 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
       imageErrors: { ...state.imageErrors, [key]: undefined as unknown as string },
     })),
   clearGeneratedImage: (key) =>
-    set((state) => {
-      const generatedImages = { ...state.generatedImages };
-      delete generatedImages[key];
-      return { generatedImages };
-    }),
+    set((state) => ({ generatedImages: omitKey(state.generatedImages, key) })),
   setGeneratingImage: (key, generating) =>
     set((state) => ({
       generatingImages: { ...state.generatingImages, [key]: generating },
@@ -335,7 +333,7 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     set((state) => ({
       debugLog: [
-        { ...entry, id, timestamp: Date.now(), completedAt: entry.response ? Date.now() : null, error: null, nodeTitle: entry.nodeTitle || "", nodeDepth: entry.nodeDepth ?? -1 },
+        { ...entry, id, timestamp: Date.now(), completedAt: entry.response ? Date.now() : null, error: null, nodeTitle: entry.nodeTitle || "", nodeDepth: entry.nodeDepth },
         ...state.debugLog,
       ].slice(0, 50),
     }));

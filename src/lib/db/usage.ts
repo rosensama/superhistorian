@@ -35,13 +35,20 @@ export async function logUsage(params: LogUsageParams): Promise<void> {
   );
 }
 
+interface UsageStatsRow {
+  total_tokens: number | null;
+  total_cost: number | null;
+  model: string | null;
+  calls: number;
+}
+
 export async function getUsageStats(): Promise<{
   totalTokens: number;
   totalCost: number;
   byModel: Record<string, { tokens: number; calls: number }>;
 }> {
   const db = await getDb();
-  const result = await db.query<[Array<Record<string, unknown>>]>(
+  const [rows] = await db.query<[UsageStatsRow[]]>(
     `SELECT
       math::sum(total_tokens) as total_tokens,
       math::sum(cost_usd) as total_cost,
@@ -50,16 +57,15 @@ export async function getUsageStats(): Promise<{
     FROM llm_usage GROUP BY model`
   );
 
-  const rows = result[0] || [];
   let totalTokens = 0;
   let totalCost = 0;
   const byModel: Record<string, { tokens: number; calls: number }> = {};
 
   for (const row of rows) {
-    const tokens = Number(row.total_tokens || 0);
-    const cost = Number(row.total_cost || 0);
-    const model = String(row.model || "unknown");
-    const calls = Number(row.calls || 0);
+    const tokens = row.total_tokens ?? 0;
+    const cost = row.total_cost ?? 0;
+    const model = row.model || "unknown";
+    const { calls } = row;
     totalTokens += tokens;
     totalCost += cost;
     byModel[model] = { tokens, calls };

@@ -31,15 +31,13 @@ async function createClient(): Promise<Surreal> {
 }
 
 export async function getDb(): Promise<Surreal> {
-  if (!globalForSurreal.surrealReady) {
-    globalForSurreal.surrealReady = createClient().then((client) => {
-      globalForSurreal.surrealClient = client;
-      return client;
-    }).catch((err) => {
-      globalForSurreal.surrealReady = undefined;
-      throw err;
-    });
-  }
+  globalForSurreal.surrealReady ??= createClient().then((client) => {
+    globalForSurreal.surrealClient = client;
+    return client;
+  }).catch((err: unknown) => {
+    globalForSurreal.surrealReady = undefined;
+    throw err;
+  });
   return globalForSurreal.surrealReady;
 }
 

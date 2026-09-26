@@ -414,9 +414,6 @@ describe("Essay Generation", () => {
 
 describe("Breadcrumb Path Logic", () => {
   it("should build correct paths through the tree", () => {
-    // Simulate tree traversal
-    const root = { id: "root", children: [] };
-
     // Build a path 10 levels deep
     const path = ["root"];
     for (let i = 1; i <= 10; i++) {

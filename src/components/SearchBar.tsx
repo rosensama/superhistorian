@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useHistorianStore } from "@/lib/store";
-import { HistoryNode } from "@/lib/types";
+import { ApiResult, HistoryNode, JumpToTopicResponse } from "@/lib/types";
 import { v4 } from "@/lib/uuid";
 
 export default function SearchBar() {
@@ -23,7 +23,7 @@ export default function SearchBar() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "jump-to-topic", query: query.trim(), model: store.selectedModel, language: store.selectedLanguage }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as ApiResult<JumpToTopicResponse>;
       if (data.error) throw new Error(data.error);
 
       useHistorianStore.getState().completeDebugEntry(debugId, data);
@@ -52,7 +52,7 @@ export default function SearchBar() {
   };
 
   return (
-    <form onSubmit={handleSearch} className="relative">
+    <form onSubmit={(e) => void handleSearch(e)} className="relative">
       <div className="flex items-center bg-white/80 backdrop-blur border-2 border-sepia/20 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow focus-within:border-sepia/50 focus-within:shadow-md">
         <span className="pl-4 text-sepia/60 text-lg">&#x1F50D;</span>
         <input

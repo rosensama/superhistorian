@@ -6,7 +6,7 @@ const AUTH_PAYLOAD = "superhistorian-ok";
 function toBase64Url(buf: ArrayBuffer): string {
   const bytes = new Uint8Array(buf);
   let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
+  for (const byte of Array.from(bytes)) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 

@@ -32,6 +32,7 @@ export default function ImageLightbox({ imageUrl, title, timeRange, geographicSc
           >
             {/* Image */}
             <div className="rounded-t-2xl overflow-hidden bg-black flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element -- generated data URLs; next/image optimization does not apply */}
               <img
                 src={imageUrl}
                 alt={title || "Historical illustration"}

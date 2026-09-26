@@ -1,4 +1,5 @@
 import { DEFAULT_DEFINE_STYLE, DEFAULT_ESSAY_STYLE } from "./prompts";
+import { omitKey } from "./omit-key";
 
 export const CLIENT_PREFS_STORAGE_KEY = "superhistorian.prefs.v1";
 
@@ -11,12 +12,12 @@ export const CLIENT_PREF_DEFAULTS = {
 
 export type ClientPrefKey = keyof typeof CLIENT_PREF_DEFAULTS;
 
-export type ClientPrefValues = {
+export interface ClientPrefValues {
   selectedModel: string;
   selectedImageModel: string;
   selectedLanguage: string;
   turboMode: boolean;
-};
+}
 
 export type ClientPrefOverrides = Partial<ClientPrefValues>;
 
@@ -27,10 +28,10 @@ export const PROMPT_STYLE_DEFAULTS = {
 
 export type PromptStyleKey = keyof typeof PROMPT_STYLE_DEFAULTS;
 
-export type PromptStyleValues = {
+export interface PromptStyleValues {
   essayStyle: string;
   defineStyle: string;
-};
+}
 
 export type PromptStyleOverrides = Partial<PromptStyleValues>;
 
@@ -119,37 +120,29 @@ export function getPromptStyleOverrides(): PromptStyleOverrides {
 export function setPref<K extends ClientPrefKey>(key: K, value: ClientPrefValues[K]): void {
   const blob = readBlob();
   if (value === CLIENT_PREF_DEFAULTS[key]) {
-    delete blob[key];
+    writeBlob(omitKey(blob, key));
   } else {
     blob[key] = value;
+    writeBlob(blob);
   }
-  writeBlob(blob);
 }
 
 export function clearPref(key: ClientPrefKey): void {
-  const blob = readBlob();
-  delete blob[key];
-  writeBlob(blob);
+  writeBlob(omitKey(readBlob(), key));
 }
 
 export function setPromptStyle(key: PromptStyleKey, value: string): void {
   const blob = readBlob();
-  const prompts = { ...(blob.prompts || {}) };
-  if (value === PROMPT_STYLE_DEFAULTS[key]) {
-    delete prompts[key];
-  } else {
-    prompts[key] = value;
-  }
-  blob.prompts = prompts;
+  const prompts = blob.prompts ?? {};
+  blob.prompts =
+    value === PROMPT_STYLE_DEFAULTS[key] ? omitKey(prompts, key) : { ...prompts, [key]: value };
   writeBlob(blob);
 }
 
 export function clearPromptStyle(key: PromptStyleKey): void {
   const blob = readBlob();
   if (!blob.prompts) return;
-  const prompts = { ...blob.prompts };
-  delete prompts[key];
-  blob.prompts = prompts;
+  blob.prompts = omitKey(blob.prompts, key);
   writeBlob(blob);
 }
 

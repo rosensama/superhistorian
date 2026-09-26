@@ -8,7 +8,7 @@ export interface InitialPhase {
   summary: string;
 }
 
-export const initialSplits: Record<string, InitialPhase[]> = {
+export const initialSplits: Record<string, InitialPhase[]> & { English: InitialPhase[] } = {
   English: [
     {
       title: "Formation & Early Earth",

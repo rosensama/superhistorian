@@ -1,14 +1,36 @@
-import { HistoryNode } from "./types";
+import {
+  DefineResponse,
+  EssayResponse,
+  HistoryNode,
+  JumpToTopicResponse,
+  SplitByGeoResponse,
+  SplitByTimeResponse,
+} from "./types";
+import { LlmUsageData } from "./db/types";
 import { mockSplitByTime, mockSplitByGeo, mockJumpToTopic, mockEssay } from "./mock-data";
 
 const USE_MOCK = !process.env.OPENROUTER_API_KEY;
 
 interface OpenRouterResult {
   content: string;
-  usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+  usage: LlmUsageData;
   model: string;
   cost?: number;
 }
+
+interface ChatCompletionResponse {
+  choices?: { message?: { content?: string | null } }[];
+  usage?: LlmUsageData & { cost?: number };
+}
+
+export interface LlmDebug {
+  prompt: string;
+  model: string;
+  usage: LlmUsageData;
+  cost?: number;
+}
+
+export type WithDebug<T> = T & { _debug: LlmDebug };
 
 // Hard ceiling: 90s total for any LLM call, no retries.
 // If it doesn't respond in 90s, it fails.
@@ -43,15 +65,17 @@ async function callOpenRouter(prompt: string, model?: string): Promise<OpenRoute
       throw new Error(`OpenRouter API error: ${res.status} ${res.statusText}`);
     }
 
-    const data = await res.json();
-    let content = data.choices[0].message.content;
+    const data = (await res.json()) as ChatCompletionResponse;
+    const rawContent = data.choices?.[0]?.message?.content;
+    if (!rawContent) {
+      throw new Error("OpenRouter returned no message content");
+    }
     // Strip markdown code fences if the model wraps JSON in ```json ... ```
-    content = content.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+    const content = rawContent.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 
-    const usage = data.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
-    const cost = usage.cost ?? data.usage?.cost ?? null;
+    const usage = data.usage ?? { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
 
-    return { content, usage, model: resolvedModel, cost };
+    return { content, usage, model: resolvedModel, cost: usage.cost };
   } catch (err) {
     clearTimeout(timer);
     if (err instanceof DOMException && err.name === "AbortError") {
@@ -61,9 +85,13 @@ async function callOpenRouter(prompt: string, model?: string): Promise<OpenRoute
   }
 }
 
-const MOCK_USAGE = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+const MOCK_USAGE: LlmUsageData = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
 
-export async function splitByTime(node: HistoryNode, model?: string, language?: string) {
+export async function splitByTime(
+  node: HistoryNode,
+  model?: string,
+  language?: string
+): Promise<WithDebug<SplitByTimeResponse>> {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));
     return { ...mockSplitByTime(node), _debug: { prompt: "(mock mode)", model: "mock", usage: MOCK_USAGE } };
@@ -72,10 +100,14 @@ export async function splitByTime(node: HistoryNode, model?: string, language?: 
   const { buildSplitByTimePrompt } = await import("./prompts");
   const prompt = buildSplitByTimePrompt(node, language);
   const { content, usage, model: resolvedModel, cost } = await callOpenRouter(prompt, model);
-  return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
+  return { ...(JSON.parse(content) as SplitByTimeResponse), _debug: { prompt, model: resolvedModel, usage, cost } };
 }
 
-export async function splitByGeo(node: HistoryNode, model?: string, language?: string) {
+export async function splitByGeo(
+  node: HistoryNode,
+  model?: string,
+  language?: string
+): Promise<WithDebug<SplitByGeoResponse>> {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));
     return { ...mockSplitByGeo(node), _debug: { prompt: "(mock mode)", model: "mock", usage: MOCK_USAGE } };
@@ -84,10 +116,14 @@ export async function splitByGeo(node: HistoryNode, model?: string, language?: s
   const { buildSplitByGeoPrompt } = await import("./prompts");
   const prompt = buildSplitByGeoPrompt(node, language);
   const { content, usage, model: resolvedModel, cost } = await callOpenRouter(prompt, model);
-  return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
+  return { ...(JSON.parse(content) as SplitByGeoResponse), _debug: { prompt, model: resolvedModel, usage, cost } };
 }
 
-export async function jumpToTopic(query: string, model?: string, language?: string) {
+export async function jumpToTopic(
+  query: string,
+  model?: string,
+  language?: string
+): Promise<WithDebug<JumpToTopicResponse>> {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 200 + Math.random() * 300));
     return { ...mockJumpToTopic(query), _debug: { prompt: "(mock mode)", model: "mock", usage: MOCK_USAGE } };
@@ -96,7 +132,7 @@ export async function jumpToTopic(query: string, model?: string, language?: stri
   const { buildJumpToTopicPrompt } = await import("./prompts");
   const prompt = buildJumpToTopicPrompt(query, language);
   const { content, usage, model: resolvedModel, cost } = await callOpenRouter(prompt, model);
-  return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
+  return { ...(JSON.parse(content) as JumpToTopicResponse), _debug: { prompt, model: resolvedModel, usage, cost } };
 }
 
 export async function generateEssay(
@@ -104,7 +140,7 @@ export async function generateEssay(
   model?: string,
   language?: string,
   essayStyle?: string
-) {
+): Promise<WithDebug<EssayResponse>> {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 500 + Math.random() * 500));
     return { ...mockEssay(node), _debug: { prompt: "(mock mode)", model: "mock", usage: MOCK_USAGE } };
@@ -113,7 +149,7 @@ export async function generateEssay(
   const { buildEssayPrompt } = await import("./prompts");
   const prompt = buildEssayPrompt(node, language, essayStyle);
   const { content, usage, model: resolvedModel, cost } = await callOpenRouter(prompt, model);
-  return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
+  return { ...(JSON.parse(content) as EssayResponse), _debug: { prompt, model: resolvedModel, usage, cost } };
 }
 
 export async function generateDefinition(
@@ -123,7 +159,7 @@ export async function generateDefinition(
   model?: string,
   language?: string,
   defineStyle?: string
-) {
+): Promise<WithDebug<DefineResponse>> {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 200 + Math.random() * 200));
     return {
@@ -135,5 +171,5 @@ export async function generateDefinition(
   const { buildDefinePrompt } = await import("./prompts");
   const prompt = buildDefinePrompt(term, context, topic, language, defineStyle);
   const { content, usage, model: resolvedModel, cost } = await callOpenRouter(prompt, model);
-  return { ...JSON.parse(content), _debug: { prompt, model: resolvedModel, usage, cost } };
+  return { ...(JSON.parse(content) as DefineResponse), _debug: { prompt, model: resolvedModel, usage, cost } };
 }

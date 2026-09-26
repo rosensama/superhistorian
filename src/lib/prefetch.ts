@@ -1,7 +1,7 @@
 // Turbo mode prefetching: fire time + geo splits for a node in the background
 // Uses a concurrency queue with AbortController support to cancel stale requests.
 import { useHistorianStore } from "./store";
-import { HistoryNode } from "./types";
+import { HistoryNode, SplitResult } from "./types";
 import { v4 } from "./uuid";
 import { slimNode } from "./slim-node";
 
@@ -45,7 +45,7 @@ function enqueue(key: string, fn: (signal: AbortSignal) => Promise<void>) {
     }
 
     activeCount++;
-    fn(controller.signal).finally(() => {
+    void fn(controller.signal).finally(() => {
       activeCount = Math.max(0, activeCount - 1);
       activeControllers.delete(key);
       const next = queue.shift();
@@ -66,8 +66,8 @@ export function cancelPrefetches(keepNodeIds?: Set<string>) {
   const keys = Array.from(activeControllers.keys());
   let keptCount = 0;
   for (const key of keys) {
-    const nodeId = key.split(":")[0];
-    if (keepNodeIds && keepNodeIds.has(nodeId)) {
+    const [nodeId = ""] = key.split(":");
+    if (keepNodeIds?.has(nodeId)) {
       keptCount++;
     } else {
       activeControllers.get(key)?.abort();
@@ -85,7 +85,7 @@ export function cancelPrefetches(keepNodeIds?: Set<string>) {
   const state = useHistorianStore.getState();
   const cancelledIds: string[] = [];
   for (const nodeId of Object.keys(state.prefetchingNodes)) {
-    if (!keepNodeIds || !keepNodeIds.has(nodeId)) {
+    if (!keepNodeIds?.has(nodeId)) {
       state.setPrefetching(nodeId, "time", false);
       state.setPrefetching(nodeId, "geo", false);
       cancelledIds.push(nodeId);
@@ -138,7 +138,7 @@ function prefetchSplit(node: HistoryNode, axis: "time" | "geo") {
       }),
       signal: controller.signal,
     })
-      .then((res) => res.json())
+      .then((res) => res.json() as Promise<SplitResult>)
       .then((data) => {
         if (controller.signal.aborted) return;
         if (data.error) throw new Error(data.error);
@@ -147,33 +147,29 @@ function prefetchSplit(node: HistoryNode, axis: "time" | "geo") {
 
         let children: HistoryNode[];
         if (axis === "time" && data.phases) {
-          children = data.phases.map(
-            (phase: { title: string; start: string; end: string; summary: string }) => ({
-              id: v4(),
-              title: phase.title,
-              summary: phase.summary,
-              timeRange: { start: phase.start, end: phase.end },
-              geographicScope: node.geographicScope,
-              parentId: node.id,
-              children: [],
-              splitAxis: null,
-              depth: node.depth + 1,
-            })
-          );
+          children = data.phases.map((phase) => ({
+            id: v4(),
+            title: phase.title,
+            summary: phase.summary,
+            timeRange: { start: phase.start, end: phase.end },
+            geographicScope: node.geographicScope,
+            parentId: node.id,
+            children: [],
+            splitAxis: null,
+            depth: node.depth + 1,
+          }));
         } else if (axis === "geo" && data.regions) {
-          children = data.regions.map(
-            (region: { regionName: string; summary: string }) => ({
-              id: v4(),
-              title: region.regionName,
-              summary: region.summary,
-              timeRange: { ...node.timeRange },
-              geographicScope: region.regionName,
-              parentId: node.id,
-              children: [],
-              splitAxis: null,
-              depth: node.depth + 1,
-            })
-          );
+          children = data.regions.map((region) => ({
+            id: v4(),
+            title: region.regionName,
+            summary: region.summary,
+            timeRange: { ...node.timeRange },
+            geographicScope: region.regionName,
+            parentId: node.id,
+            children: [],
+            splitAxis: null,
+            depth: node.depth + 1,
+          }));
         } else {
           throw new Error("Unexpected response shape");
         }
@@ -181,7 +177,7 @@ function prefetchSplit(node: HistoryNode, axis: "time" | "geo") {
         recordDuration(Date.now() - startTime);
         useHistorianStore.getState().setPrefetchedSplit(node.id, axis, children);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === "AbortError") {
           // Could be cancellation or timeout — check which
           const reason = cancelSignal.aborted ? "Cancelled" : `Timeout: no response within ${CLIENT_TIMEOUT_MS / 1000}s`;

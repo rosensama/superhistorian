@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useHistorianStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import ImageLightbox from "./ImageLightbox";
+import { ApiResult, GenerateImageResponse } from "@/lib/types";
 
 interface ImagePlaceholderProps {
   contextText: string;
@@ -26,7 +27,7 @@ const imageQueue: (() => void)[] = [];
 function enqueueImage(fn: () => Promise<void>) {
   const run = () => {
     imageActiveCount++;
-    fn().finally(() => {
+    void fn().finally(() => {
       imageActiveCount--;
       const next = imageQueue.shift();
       if (next) next();
@@ -72,7 +73,7 @@ export function generateImage(cacheKey: string, contextText: string) {
       });
       clearTimeout(timer);
 
-      const data = await res.json();
+      const data = (await res.json()) as ApiResult<GenerateImageResponse>;
       useHistorianStore.getState().completeDebugEntry(debugId, data);
       if (data.error) throw new Error(data.error);
       useHistorianStore.getState().setGeneratedImage(cacheKey, data.imageUrl);
@@ -102,6 +103,7 @@ export default function ImagePlaceholder({ contextText, cacheKey, compact, title
           className={`relative rounded-xl overflow-hidden border border-sepia/20 shadow-sm cursor-pointer hover:shadow-md transition-shadow group ${compact ? "my-4" : "my-3"}`}
           onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element -- generated data URLs; next/image optimization does not apply */}
           <img
             src={existingImage}
             alt={title || `Historical illustration: ${contextText.slice(0, 80)}...`}

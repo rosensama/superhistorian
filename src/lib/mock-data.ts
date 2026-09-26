@@ -15,8 +15,10 @@ function simpleHash(str: string): number {
   return Math.abs(hash);
 }
 
-function pick<T>(arr: T[], hash: number, index: number): T {
-  return arr[(hash + index * 7) % arr.length];
+function pick<T>(arr: readonly T[], hash: number, index: number): T {
+  const item = arr[(hash + index * 7) % arr.length];
+  if (item === undefined) throw new Error("pick() needs a non-empty array");
+  return item;
 }
 
 // ----- Rich content banks -----
@@ -128,8 +130,6 @@ export function mockSplitByTime(node: HistoryNode): SplitByTimeResponse {
     const summary = summaryTemplate.replace(/\{scope\}/g, node.geographicScope);
 
     // Create plausible time subdivisions
-    const fraction = i / 5;
-    const nextFraction = (i + 1) / 5;
     const start = i === 0 ? node.timeRange.start : `Phase ${i + 1} start`;
     const end = i === 4 ? node.timeRange.end : `Phase ${i + 1} end`;
 
@@ -146,7 +146,7 @@ export function mockSplitByGeo(node: HistoryNode): SplitByGeoResponse {
   let regionNames: string[];
   const scopeRegions = GEO_REGIONS[node.geographicScope];
   if (scopeRegions) {
-    regionNames = scopeRegions[h % scopeRegions.length];
+    regionNames = pick(scopeRegions, h, 0);
   } else {
     // Generate plausible sub-regions based on the scope
     regionNames = [
@@ -196,7 +196,7 @@ export function mockJumpToTopic(query: string): JumpToTopicResponse {
 
 export function mockEssay(node: HistoryNode): EssayResponse {
   const h = simpleHash(node.id + "essay");
-  const template = ESSAY_TEMPLATES[h % ESSAY_TEMPLATES.length];
+  const template = pick(ESSAY_TEMPLATES, h, 0);
   const essay = template
     .replace(/\{title\}/g, node.title)
     .replace(/\{scope\}/g, node.geographicScope)

@@ -96,28 +96,32 @@ function getPromptStyleOverrides() {
   return out;
 }
 
+function omitKey(obj, key) {
+  return Object.fromEntries(Object.entries(obj).filter(([k]) => k !== key));
+}
+
 function setPref(key, value) {
   const blob = readBlob();
-  if (value === CLIENT_PREF_DEFAULTS[key]) delete blob[key];
-  else blob[key] = value;
-  writeBlob(blob);
+  if (value === CLIENT_PREF_DEFAULTS[key]) {
+    writeBlob(omitKey(blob, key));
+  } else {
+    blob[key] = value;
+    writeBlob(blob);
+  }
 }
 
 function setPromptStyle(key, value) {
   const blob = readBlob();
-  const prompts = { ...(blob.prompts || {}) };
-  if (value === PROMPT_STYLE_DEFAULTS[key]) delete prompts[key];
-  else prompts[key] = value;
-  blob.prompts = prompts;
+  const prompts = blob.prompts ?? {};
+  blob.prompts =
+    value === PROMPT_STYLE_DEFAULTS[key] ? omitKey(prompts, key) : { ...prompts, [key]: value };
   writeBlob(blob);
 }
 
 function clearPromptStyle(key) {
   const blob = readBlob();
   if (!blob.prompts) return;
-  const prompts = { ...blob.prompts };
-  delete prompts[key];
-  blob.prompts = prompts;
+  blob.prompts = omitKey(blob.prompts, key);
   writeBlob(blob);
 }
 

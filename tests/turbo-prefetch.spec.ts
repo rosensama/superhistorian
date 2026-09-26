@@ -7,7 +7,7 @@ test.describe("Turbo mode prefetching", () => {
     page.on("request", (req) => {
       if (req.url().includes("/api/explore")) {
         try {
-          const body = req.postDataJSON();
+          const body = req.postDataJSON() as { action?: string } | null;
           apiCalls.push({ action: body?.action || "?", ts: Date.now() });
         } catch {}
       }
@@ -63,7 +63,7 @@ test.describe("Turbo mode prefetching", () => {
     console.log("Clicked first card");
 
     // New API calls should fire for the new level's cards
-    await expect(async () => {
+    await expect(() => {
       const newCalls = apiCalls.length - callsBeforeClick;
       console.log(`  Step 3: ${newCalls} new API calls`);
       expect(newCalls).toBeGreaterThanOrEqual(2);

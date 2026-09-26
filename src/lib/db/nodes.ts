@@ -1,7 +1,19 @@
 // CRUD operations for history_node in SurrealDB
+import type { RecordId } from "surrealdb";
 import { getDb } from "./client";
 import { LlmUsageData } from "./types";
 import { HistoryNode } from "../types";
+
+interface HistoryNodeRow {
+  id: RecordId | string;
+  title?: string;
+  summary?: string;
+  time_range_start?: string;
+  time_range_end?: string;
+  geographic_scope?: string;
+  split_axis?: "time" | "geography" | null;
+  depth?: number;
+}
 
 export interface CreateNodeOptions {
   node: HistoryNode;
@@ -79,23 +91,20 @@ export async function saveImagePath(nodeId: string, imagePath: string, imageMode
 
 export async function getNode(nodeId: string): Promise<HistoryNode | null> {
   const db = await getDb();
-  const result = await db.query<[Array<Record<string, unknown>>]>(
+  const [rows] = await db.query<[HistoryNodeRow[]]>(
     `SELECT * FROM type::thing('history_node', $id)`,
     { id: nodeId }
   );
-  const rows = result[0];
-  if (!rows || rows.length === 0) return null;
-  return dbRowToHistoryNode(rows[0]);
+  const [row] = rows;
+  return row ? dbRowToHistoryNode(row) : null;
 }
 
 export async function getChildren(parentId: string): Promise<HistoryNode[]> {
   const db = await getDb();
-  const result = await db.query<[Array<Record<string, unknown>>]>(
+  const [rows] = await db.query<[HistoryNodeRow[]]>(
     `SELECT out.* FROM parent_of WHERE in = type::thing('history_node', $parentId) ORDER BY child_order`,
     { parentId }
   );
-  const rows = result[0];
-  if (!rows) return [];
   return rows.map((row) => dbRowToHistoryNode(row));
 }
 
@@ -111,23 +120,23 @@ export async function getTree(rootId: string): Promise<HistoryNode | null> {
   return root;
 }
 
-function dbRowToHistoryNode(row: Record<string, unknown>): HistoryNode {
+function dbRowToHistoryNode(row: HistoryNodeRow): HistoryNode {
   // SurrealDB returns IDs as "history_node:xyz" — extract just "xyz"
-  const rawId = String(row.id || "");
+  const rawId = row.id.toString();
   const id = rawId.includes(":") ? rawId.split(":").slice(1).join(":") : rawId;
 
   return {
     id,
-    title: String(row.title || ""),
-    summary: String(row.summary || ""),
+    title: row.title ?? "",
+    summary: row.summary ?? "",
     timeRange: {
-      start: String(row.time_range_start || ""),
-      end: String(row.time_range_end || ""),
+      start: row.time_range_start ?? "",
+      end: row.time_range_end ?? "",
     },
-    geographicScope: String(row.geographic_scope || ""),
+    geographicScope: row.geographic_scope ?? "",
     parentId: null,
     children: [],
-    splitAxis: (row.split_axis as "time" | "geography") || null,
-    depth: Number(row.depth || 0),
+    splitAxis: row.split_axis ?? null,
+    depth: row.depth ?? 0,
   };
 }

@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ExploreRequest } from "@/lib/types";
-import { splitByTime, splitByGeo, jumpToTopic, generateEssay, generateDefinition } from "@/lib/openrouter";
+import {
+  splitByTime,
+  splitByGeo,
+  jumpToTopic,
+  generateEssay,
+  generateDefinition,
+  LlmDebug,
+} from "@/lib/openrouter";
 import { isDbAvailable } from "@/lib/db/client";
 import { logUsage } from "@/lib/db/usage";
 
 const MAX_STYLE_CHARS = 16_384;
 
-function sanitizeStyle(style: string | undefined): string | undefined | { error: string } {
+function sanitizeStyle(style: unknown): string | undefined | { error: string } {
   if (style === undefined || style === null) return undefined;
   if (typeof style !== "string") return { error: "Style must be a string" };
   if (style.length > MAX_STYLE_CHARS) return { error: `Style exceeds ${MAX_STYLE_CHARS} characters` };
@@ -14,12 +21,11 @@ function sanitizeStyle(style: string | undefined): string | undefined | { error:
 }
 
 // Best-effort DB persistence — doesn't block the response
-async function persistUsage(debug: { model: string; usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number }; cost?: number }, action: string, nodeId?: string) {
+async function persistUsage(debug: LlmDebug, action: string, nodeId?: string) {
   try {
     if (!(await isDbAvailable())) return;
-    if (!debug.usage) return;
     await logUsage({
-      nodeId: nodeId || null,
+      nodeId: nodeId ?? null,
       action,
       model: debug.model,
       prompt_tokens: debug.usage.prompt_tokens,
@@ -34,7 +40,7 @@ async function persistUsage(debug: { model: string; usage?: { prompt_tokens: num
 
 export async function POST(req: NextRequest) {
   try {
-    const body: ExploreRequest = await req.json();
+    const body = (await req.json()) as ExploreRequest;
 
     const model = body.model;
     const language = body.language;
@@ -44,19 +50,19 @@ export async function POST(req: NextRequest) {
         if (!body.node) return NextResponse.json({ error: "Node required" }, { status: 400 });
         const result = await splitByTime(body.node, model, language);
         // Fire-and-forget persistence
-        persistUsage(result._debug, "split-time", body.node.id);
+        void persistUsage(result._debug, "split-time", body.node.id);
         return NextResponse.json(result);
       }
       case "split-geography": {
         if (!body.node) return NextResponse.json({ error: "Node required" }, { status: 400 });
         const result = await splitByGeo(body.node, model, language);
-        persistUsage(result._debug, "split-geography", body.node.id);
+        void persistUsage(result._debug, "split-geography", body.node.id);
         return NextResponse.json(result);
       }
       case "jump-to-topic": {
         if (!body.query) return NextResponse.json({ error: "Query required" }, { status: 400 });
         const result = await jumpToTopic(body.query, model, language);
-        persistUsage(result._debug, "jump-to-topic");
+        void persistUsage(result._debug, "jump-to-topic");
         return NextResponse.json(result);
       }
       case "essay": {
@@ -66,9 +72,9 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: essayStyle.error }, { status: 400 });
         }
         const result = await generateEssay(body.node, model, language, essayStyle);
-        persistUsage(result._debug, "essay", body.node.id);
+        void persistUsage(result._debug, "essay", body.node.id);
         // Persist essay to node if DB available
-        persistEssay(body.node.id, result.essay, result._debug);
+        void persistEssay(body.node.id, result.essay, result._debug);
         return NextResponse.json(result);
       }
       case "define": {
@@ -86,7 +92,7 @@ export async function POST(req: NextRequest) {
           language,
           defineStyle
         );
-        persistUsage(result._debug, "define", body.node?.id);
+        void persistUsage(result._debug, "define", body.node?.id);
         return NextResponse.json(result);
       }
       default:
@@ -101,7 +107,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function persistEssay(nodeId: string, essay: string, debug: { model: string; usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number } }) {
+async function persistEssay(nodeId: string, essay: string, debug: LlmDebug) {
   try {
     if (!(await isDbAvailable())) return;
     const { saveEssay } = await import("@/lib/db/nodes");

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ApiError } from "@/lib/types";
 
 function LoginForm() {
   const router = useRouter();
@@ -20,7 +21,7 @@ function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as Partial<ApiError>;
       if (!res.ok) {
         setError(data.error || "Login failed");
         return;
@@ -36,7 +37,7 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4">
+    <form onSubmit={(e) => void onSubmit(e)} className="w-full max-w-sm space-y-4">
       <label className="block">
         <span className="text-sm font-serif text-ink/70">Password</span>
         <input

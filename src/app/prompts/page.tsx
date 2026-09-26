@@ -136,7 +136,7 @@ export default function PromptsPage() {
   }, [hydrateClientPrefs]);
 
   const previewNode = useMemo(() => {
-    if (currentNode && currentNode.id !== "root") return currentNode;
+    if (currentNode.id !== "root") return currentNode;
     return SAMPLE_PROMPT_NODE;
   }, [currentNode]);
 

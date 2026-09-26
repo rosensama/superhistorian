@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useHistorianStore } from "@/lib/store";
 import { isOverride } from "@/lib/client-prefs";
 import { PrefOverrideCue, prefTriggerClass } from "./PrefOverrideCue";
+import type { ApiResult } from "@/lib/types";
 
 interface Model {
   id: string;
@@ -32,7 +33,7 @@ export default function ImageModelSelector() {
     setError(null);
     try {
       const res = await fetch("/api/models?type=image");
-      const data = await res.json();
+      const data = (await res.json()) as ApiResult<{ models: Model[] }>;
       if (data.error) throw new Error(data.error);
       setModels(data.models);
     } catch (err) {
@@ -45,7 +46,7 @@ export default function ImageModelSelector() {
   const handleToggle = () => {
     const next = !isOpen;
     setIsOpen(next);
-    if (next) fetchModels();
+    if (next) void fetchModels();
   };
 
   useEffect(() => {

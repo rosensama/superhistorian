@@ -5,7 +5,7 @@ function langInstruction(language: string): string {
   return `\n\nRespond entirely in ${language}. All titles, summaries, and text content must be in ${language}. JSON keys must remain in English.`;
 }
 
-export function buildSplitByTimePrompt(node: HistoryNode, language: string = "English"): string {
+export function buildSplitByTimePrompt(node: HistoryNode, language = "English"): string {
   return `You are a historian. Given the following historical period, divide it into 3 to 6 sequential sub-periods (including an "Other" category for anything that doesn't fit neatly). For each, provide:
 - title (short, evocative name)
 - start and end dates
@@ -19,7 +19,7 @@ Context: ${node.summary}
 Respond in JSON: { "phases": [{ "title", "start", "end", "summary" }] }${langInstruction(language)}`;
 }
 
-export function buildSplitByGeoPrompt(node: HistoryNode, language: string = "English"): string {
+export function buildSplitByGeoPrompt(node: HistoryNode, language = "English"): string {
   return `You are a historian. Given the following historical period and region, divide the geographic scope into 3 to 6 meaningful sub-regions for this era (including an "Other" category for anything that doesn't fit neatly). For each, provide:
 - regionName
 - summary of what was happening there during this period (2-3 sentences)
@@ -32,7 +32,7 @@ Context: ${node.summary}
 Respond in JSON: { "regions": [{ "regionName", "summary" }] }${langInstruction(language)}`;
 }
 
-export function buildJumpToTopicPrompt(query: string, language: string = "English"): string {
+export function buildJumpToTopicPrompt(query: string, language = "English"): string {
   return `You are a historian. The user wants to explore: "${query}"
 
 Provide:
@@ -78,8 +78,8 @@ Surrounding text: ${context.slice(0, 800)}`;
 
 export function buildEssayPrompt(
   node: HistoryNode,
-  language: string = "English",
-  style: string = DEFAULT_ESSAY_STYLE
+  language = "English",
+  style = DEFAULT_ESSAY_STYLE
 ): string {
   return `${style}
 
@@ -92,8 +92,8 @@ export function buildDefinePrompt(
   term: string,
   context: string,
   topic: string,
-  language: string = "English",
-  style: string = DEFAULT_DEFINE_STYLE
+  language = "English",
+  style = DEFAULT_DEFINE_STYLE
 ): string {
   return `${style}
 

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   let body: { password?: string };
   try {
-    body = await req.json();
+    body = (await req.json()) as { password?: string };
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }

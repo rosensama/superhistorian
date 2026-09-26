@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { HistoryNode } from "@/lib/types";
+import { ApiResult, DefineResponse, HistoryNode } from "@/lib/types";
 import { useHistorianStore } from "@/lib/store";
 import { slimNode } from "@/lib/slim-node";
 import { normalizeTerm, segmentDefinedTerms } from "@/lib/define-text";
@@ -116,7 +116,7 @@ export default function DefinableText({ text, node, className }: DefinableTextPr
             : {}),
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as ApiResult<DefineResponse>;
       if (data.error) throw new Error(data.error);
       useHistorianStore.getState().completeDebugEntry(debugId, data);
       setDefinition(node.id, term, data.definition);
@@ -176,7 +176,7 @@ export default function DefinableText({ text, node, className }: DefinableTextPr
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              requestDefine();
+              void requestDefine();
             }}
             disabled={pendingLoading}
             className="px-2.5 py-1 text-xs font-serif bg-navy text-white rounded-md shadow-md hover:bg-navy/80 disabled:opacity-50"

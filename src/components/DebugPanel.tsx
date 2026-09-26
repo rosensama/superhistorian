@@ -18,7 +18,7 @@ const ACTION_STYLES: Record<string, { bg: string; text: string; barColor: string
 };
 
 function getStyle(action: string) {
-  return ACTION_STYLES[action] || { bg: "bg-gray-600", text: "text-gray-100", barColor: "from-gray-500/50 to-gray-400/30", label: action.slice(0, 8).toUpperCase() };
+  return ACTION_STYLES[action] ?? { bg: "bg-gray-600", text: "text-gray-100", barColor: "from-gray-500/50 to-gray-400/30", label: action.slice(0, 8).toUpperCase() };
 }
 
 function formatDuration(ms: number): string {
@@ -38,7 +38,7 @@ function DebugRow({ entry }: { entry: DebugEntry }) {
   }, [isInFlight]);
 
   const style = getStyle(entry.action);
-  const elapsed = (entry.completedAt || Date.now()) - entry.timestamp;
+  const elapsed = (entry.completedAt ?? Date.now()) - entry.timestamp;
   const progress = Math.min(100, (elapsed / TIMEOUT_MS) * 100);
   const duration = entry.completedAt ? entry.completedAt - entry.timestamp : elapsed;
 
@@ -148,7 +148,7 @@ function ResponseTable({ response }: { response: Record<string, unknown> }) {
           </tr>
         </thead>
         <tbody>
-          {(response.phases as Array<{ title: string; start: string; end: string; summary: string }>).map((p, i) => (
+          {(response.phases as { title: string; start: string; end: string; summary: string }[]).map((p, i) => (
             <tr key={i} className="border-b border-white/5">
               <td className="py-0.5 pr-2 text-white/80 font-medium">{p.title}</td>
               <td className="py-0.5 pr-2 text-white/50">{p.start}</td>
@@ -172,7 +172,7 @@ function ResponseTable({ response }: { response: Record<string, unknown> }) {
           </tr>
         </thead>
         <tbody>
-          {(response.regions as Array<{ regionName: string; summary: string }>).map((r, i) => (
+          {(response.regions as { regionName: string; summary: string }[]).map((r, i) => (
             <tr key={i} className="border-b border-white/5">
               <td className="py-0.5 pr-2 text-white/80 font-medium">{r.regionName}</td>
               <td className="py-0.5 text-white/50">{r.summary}</td>
@@ -197,13 +197,11 @@ function ResponseTable({ response }: { response: Record<string, unknown> }) {
 }
 
 const MIN_HEIGHT = 240;
-const DEFAULT_HEIGHT = 320;
 const MAX_HEIGHT_RATIO = 0.8;
 
 export default function DebugPanel() {
   const { debugLog, showDebug, toggleDebug, debugPanelHeight, setDebugPanelHeight } = useHistorianStore();
   const panelHeight = debugPanelHeight;
-  const setPanelHeight = (h: number) => setDebugPanelHeight(h);
   const isDragging = useRef(false);
   const startY = useRef(0);
   const startHeight = useRef(0);
@@ -221,7 +219,7 @@ export default function DebugPanel() {
       const delta = startY.current - e.clientY;
       const maxHeight = window.innerHeight * MAX_HEIGHT_RATIO;
       const newHeight = Math.min(maxHeight, Math.max(MIN_HEIGHT, startHeight.current + delta));
-      setPanelHeight(newHeight);
+      setDebugPanelHeight(newHeight);
     };
     const handleMouseUp = () => { isDragging.current = false; };
     window.addEventListener("mousemove", handleMouseMove);
@@ -230,7 +228,7 @@ export default function DebugPanel() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, []);
+  }, [setDebugPanelHeight]);
 
   const inFlightCount = debugLog.filter((e) => !e.completedAt && !e.error).length;
 

@@ -1,10 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveImage } from "@/lib/db/images";
 import { isDbAvailable } from "@/lib/db/client";
+import { LlmUsageData } from "@/lib/db/types";
+
+interface GenerateImageRequest {
+  context?: string;
+  model?: string;
+  nodeId?: string;
+}
+
+interface ImagePart {
+  type?: string;
+  url?: string;
+  image_url?: { url?: string };
+}
+
+interface ImageChatResponse {
+  choices?: { message?: { images?: ImagePart[]; content?: string | ImagePart[] | null } }[];
+  usage?: LlmUsageData;
+}
+
+function findImageUrl(parts: ImagePart[]): string | undefined {
+  const imagePart = parts.find((part) => part.type === "image_url" || part.type === "image");
+  return imagePart?.image_url?.url || imagePart?.url;
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { context, model, nodeId } = await req.json();
+    const { context, model, nodeId } = (await req.json()) as GenerateImageRequest;
 
     if (!context) {
       return NextResponse.json({ error: "Context required" }, { status: 400 });
@@ -52,38 +75,29 @@ Generate a single image that captures the essence of this historical moment.`;
       throw new Error(`OpenRouter API error: ${res.status} ${errText}`);
     }
 
-    const data = await res.json();
-    const msg = data.choices?.[0]?.message;
+    const data = (await res.json()) as ImageChatResponse;
     const message = data.choices?.[0]?.message;
-    const usage = data.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+    const usage = data.usage ?? { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
     const debugInfo = { prompt, model: imageModel, usage };
 
     // Extract image URL from various response formats
-    let imageUrl: string | null = null;
+    let imageUrl: string | undefined;
+    const images = message?.images;
+    const content = message?.content;
 
     // OpenAI-style: images array on the message object
-    if (message?.images && Array.isArray(message.images)) {
-      const imagePart = message.images.find(
-        (part: { type: string }) => part.type === "image_url" || part.type === "image"
-      );
-      if (imagePart) {
-        imageUrl = imagePart.image_url?.url || imagePart.url;
-      }
+    if (Array.isArray(images)) {
+      imageUrl = findImageUrl(images);
     }
 
     // Content as array with image parts
-    if (!imageUrl && message?.content && Array.isArray(message.content)) {
-      const imagePart = message.content.find(
-        (part: { type: string }) => part.type === "image_url" || part.type === "image"
-      );
-      if (imagePart) {
-        imageUrl = imagePart.image_url?.url || imagePart.url;
-      }
+    if (!imageUrl && Array.isArray(content)) {
+      imageUrl = findImageUrl(content);
     }
 
     // Content as a base64 data URL string
-    if (!imageUrl && message?.content && typeof message.content === "string" && message.content.startsWith("data:image")) {
-      imageUrl = message.content;
+    if (!imageUrl && typeof content === "string" && content.startsWith("data:image")) {
+      imageUrl = content;
     }
 
     if (!imageUrl) {
@@ -118,7 +132,7 @@ Generate a single image that captures the essence of this historical moment.`;
             console.warn("[DB] Failed to persist image metadata:", err);
           }
         })
-        .catch((err) => console.warn("[Image] Failed to save to disk:", err));
+        .catch((err: unknown) => console.warn("[Image] Failed to save to disk:", err));
     }
 
     return NextResponse.json({ imageUrl, _debug: debugInfo });

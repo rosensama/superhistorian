@@ -12,8 +12,9 @@ function parseEndYear(endDate: string): number | null {
   // Match the last 4-digit year in the string (e.g. "late 19th century" → null,
   // "1970" → 1970, "c. 1850 BCE" → 1850 treated as negative handled below)
   const matches = endDate.match(/\b(\d{4})\b/g);
-  if (!matches) return null;
-  const year = parseInt(matches[matches.length - 1]);
+  const last = matches?.at(-1);
+  if (!last) return null;
+  const year = parseInt(last);
   // Treat BCE/BC years as negative — no modern style for those
   if (/bce?|bc/i.test(endDate)) return -year;
   return year;

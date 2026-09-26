@@ -8,13 +8,17 @@ interface OpenRouterModel {
   created: number;
   description: string;
   context_length: number;
-  architecture: {
-    output_modalities: string[];
+  architecture?: {
+    output_modalities?: string[];
   };
-  pricing: {
+  pricing?: {
     prompt: string;
     completion: string;
   };
+}
+
+interface OpenRouterModelsResponse {
+  data: OpenRouterModel[];
 }
 
 // Preferred text models in display order
@@ -42,11 +46,11 @@ export async function GET(req: NextRequest) {
       throw new Error(`OpenRouter API error: ${res.status}`);
     }
 
-    const { data } = await res.json();
+    const { data } = (await res.json()) as OpenRouterModelsResponse;
     const type = req.nextUrl.searchParams.get("type");
 
     // Filter by type if specified
-    let filtered = (data as OpenRouterModel[]).filter((m) => m.created && m.name);
+    let filtered = data.filter((m) => m.created && m.name);
     if (type === "image") {
       filtered = filtered.filter((m) =>
         m.architecture?.output_modalities?.includes("image")

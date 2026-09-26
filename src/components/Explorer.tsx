@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { useHistorianStore } from "@/lib/store";
-import { HistoryNode } from "@/lib/types";
+import { ApiResult, EssayResponse, HistoryNode, SplitByGeoResponse, SplitByTimeResponse } from "@/lib/types";
 import { v4 } from "@/lib/uuid";
 import { slimNode } from "@/lib/slim-node";
 import { needsExpandForAction } from "@/lib/path";
@@ -20,7 +20,7 @@ import { initialSplits } from "@/lib/initial-splits";
 import { prefetchForNode, cancelPrefetches } from "@/lib/prefetch";
 import { buildMapContext } from "@/lib/map-context";
 import { isPromptStyleOverride } from "@/lib/client-prefs";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 // A single level in the vertical exploration thread
 function ExplorationLevel({
@@ -83,8 +83,8 @@ function ExplorationLevel({
   useEffect(() => {
     if (turboMode && isDeepest && !hasChildren && prefetched) {
       const allPrefetchedCards = [
-        ...(prefetched.time || []),
-        ...(prefetched.geo || []),
+        ...(prefetched.time ?? []),
+        ...(prefetched.geo ?? []),
       ];
       for (const card of allPrefetchedCards) {
         prefetchForNode(card);
@@ -269,7 +269,7 @@ function ExplorationLevel({
       {turboMode && isDeepest && !hasChildren && (() => {
         // Order: show the user's preferred axis first
         const preferTime = lastSplitAxis === "time";
-        const axes: Array<{ axis: "time" | "geo"; splitAxis: "time" | "geography"; icon: string; label: string }> = [
+        const axes: { axis: "time" | "geo"; splitAxis: "time" | "geography"; icon: string; label: string }[] = [
           { axis: "time", splitAxis: "time", icon: "⏳", label: "Time Periods" },
           { axis: "geo", splitAxis: "geography", icon: "🗺️", label: "Geographic Regions" },
         ];
@@ -362,7 +362,7 @@ export default function Explorer() {
     const state = useHistorianStore.getState();
     if (state.tree.id === "root" && state.tree.children.length === 0) {
       const lang = state.selectedLanguage;
-      const phases = initialSplits[lang] || initialSplits["English"];
+      const phases = initialSplits[lang] ?? initialSplits.English;
       const children: HistoryNode[] = phases.map((phase) => ({
         id: v4(),
         title: phase.title,
@@ -376,8 +376,7 @@ export default function Explorer() {
       }));
       setChildren(state.tree.id, children, "time");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hydrateClientPrefs, setChildren]);
 
   // Auto-scroll to bottom when path changes
   useEffect(() => {
@@ -428,7 +427,7 @@ export default function Explorer() {
     async (node: HistoryNode) => {
       ensureNodeSelected(node);
       // Re-read after possible prefetch commit
-      node = useHistorianStore.getState().findNode(node.id) || node;
+      node = useHistorianStore.getState().findNode(node.id) ?? node;
 
       if (node.children.length > 0 && node.splitAxis === "time") {
         navigateTo(node.id);
@@ -458,24 +457,22 @@ export default function Explorer() {
           body: JSON.stringify({ action: "split-time", node: slimNode(node), model: store.selectedModel, language: store.selectedLanguage }),
           signal,
         });
-        const data = await res.json();
+        const data = (await res.json()) as ApiResult<SplitByTimeResponse>;
         if (data.error) throw new Error(data.error);
 
         useHistorianStore.getState().completeDebugEntry(debugId, data);
 
-        const children: HistoryNode[] = data.phases.map(
-          (phase: { title: string; start: string; end: string; summary: string }) => ({
-            id: v4(),
-            title: phase.title,
-            summary: phase.summary,
-            timeRange: { start: phase.start, end: phase.end },
-            geographicScope: node.geographicScope,
-            parentId: node.id,
-            children: [],
-            splitAxis: null,
-            depth: node.depth + 1,
-          })
-        );
+        const children: HistoryNode[] = data.phases.map((phase) => ({
+          id: v4(),
+          title: phase.title,
+          summary: phase.summary,
+          timeRange: { start: phase.start, end: phase.end },
+          geographicScope: node.geographicScope,
+          parentId: node.id,
+          children: [],
+          splitAxis: null,
+          depth: node.depth + 1,
+        }));
 
         setChildren(node.id, children, "time");
         useHistorianStore.getState().setLastSplitAxis("time");
@@ -497,7 +494,7 @@ export default function Explorer() {
   const handleSplitGeo = useCallback(
     async (node: HistoryNode) => {
       ensureNodeSelected(node);
-      node = useHistorianStore.getState().findNode(node.id) || node;
+      node = useHistorianStore.getState().findNode(node.id) ?? node;
 
       if (node.children.length > 0 && node.splitAxis === "geography") {
         navigateTo(node.id);
@@ -526,24 +523,22 @@ export default function Explorer() {
           body: JSON.stringify({ action: "split-geography", node: slimNode(node), model: store.selectedModel, language: store.selectedLanguage }),
           signal,
         });
-        const data = await res.json();
+        const data = (await res.json()) as ApiResult<SplitByGeoResponse>;
         if (data.error) throw new Error(data.error);
 
         useHistorianStore.getState().completeDebugEntry(debugId, data);
 
-        const children: HistoryNode[] = data.regions.map(
-          (region: { regionName: string; summary: string }) => ({
-            id: v4(),
-            title: region.regionName,
-            summary: region.summary,
-            timeRange: { ...node.timeRange },
-            geographicScope: region.regionName,
-            parentId: node.id,
-            children: [],
-            splitAxis: null,
-            depth: node.depth + 1,
-          })
-        );
+        const children: HistoryNode[] = data.regions.map((region) => ({
+          id: v4(),
+          title: region.regionName,
+          summary: region.summary,
+          timeRange: { ...node.timeRange },
+          geographicScope: region.regionName,
+          parentId: node.id,
+          children: [],
+          splitAxis: null,
+          depth: node.depth + 1,
+        }));
 
         setChildren(node.id, children, "geography");
         useHistorianStore.getState().setLastSplitAxis("geography");
@@ -584,7 +579,7 @@ export default function Explorer() {
               : {}),
           }),
         });
-        const data = await res.json();
+        const data = (await res.json()) as ApiResult<EssayResponse>;
         if (data.error) throw new Error(data.error);
 
         useHistorianStore.getState().completeDebugEntry(debugId, data);
@@ -603,9 +598,10 @@ export default function Explorer() {
   // Build the vertical thread: walk the currentPath and resolve each node
   const levels: { node: HistoryNode; selectedChildId: string | null }[] = [];
   for (let i = 0; i < currentPath.length; i++) {
-    const node = findNode(currentPath[i]);
+    const nodeId = currentPath[i];
+    const node = nodeId === undefined ? null : findNode(nodeId);
     if (!node) break;
-    const selectedChildId = i + 1 < currentPath.length ? currentPath[i + 1] : null;
+    const selectedChildId = currentPath[i + 1] ?? null;
     levels.push({ node, selectedChildId });
   }
 
@@ -696,7 +692,7 @@ export default function Explorer() {
               className="font-serif text-ink/70 max-w-lg mb-8 text-lg leading-relaxed"
             />
             <button
-              onClick={() => handleSplitTime(tree)}
+              onClick={() => void handleSplitTime(tree)}
               className="px-8 py-4 bg-navy text-white font-display text-lg rounded-2xl hover:bg-navy/80 transition-all hover:scale-105 shadow-lg"
             >
               ⏳ Begin the Journey
@@ -717,10 +713,10 @@ export default function Explorer() {
               node={level.node}
               selectedChildId={level.selectedChildId}
               depth={i}
-              onSplitTime={handleSplitTime}
-              onSplitGeo={handleSplitGeo}
+              onSplitTime={(n) => void handleSplitTime(n)}
+              onSplitGeo={(n) => void handleSplitGeo(n)}
               onSelectChild={handleSelectChild}
-              onEssay={handleEssay}
+              onEssay={(n) => void handleEssay(n)}
               onEnsureSelected={ensureNodeSelected}
               isLoading={isLoading}
               isDeepest={isDeepest}
