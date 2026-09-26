@@ -3,10 +3,10 @@ import {
   EssayResponse,
   HistoryNode,
   JumpToTopicResponse,
+  LlmUsageData,
   SplitByGeoResponse,
   SplitByTimeResponse,
 } from "./types";
-import { LlmUsageData } from "./db/types";
 import { mockSplitByTime, mockSplitByGeo, mockJumpToTopic, mockEssay } from "./mock-data";
 
 const USE_MOCK = !process.env.OPENROUTER_API_KEY;

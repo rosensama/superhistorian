@@ -23,8 +23,6 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-RUN mkdir -p data/images && chown -R nextjs:nodejs data
-
 ARG RELEASE_TAG=dev
 ARG RELEASE_COMMIT=unknown
 LABEL org.opencontainers.image.title="superhistorian" \

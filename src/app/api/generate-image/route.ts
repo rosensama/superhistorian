@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveImage } from "@/lib/db/images";
-import { isDbAvailable } from "@/lib/db/client";
-import { LlmUsageData } from "@/lib/db/types";
+import { LlmUsageData } from "@/lib/types";
 
 interface GenerateImageRequest {
   context?: string;
   model?: string;
-  nodeId?: string;
 }
 
 interface ImagePart {
@@ -27,7 +24,7 @@ function findImageUrl(parts: ImagePart[]): string | undefined {
 
 export async function POST(req: NextRequest) {
   try {
-    const { context, model, nodeId } = (await req.json()) as GenerateImageRequest;
+    const { context, model } = (await req.json()) as GenerateImageRequest;
 
     if (!context) {
       return NextResponse.json({ error: "Context required" }, { status: 400 });
@@ -106,33 +103,6 @@ Generate a single image that captures the essence of this historical moment.`;
         rawResponse: data,
         _debug: debugInfo,
       }, { status: 500 });
-    }
-
-    // Return image to client immediately — save to disk/DB in background
-    // (don't block the response on persistence)
-    if (imageUrl.startsWith("data:image") && nodeId) {
-      // Fire-and-forget: save to disk + DB
-      saveImage(nodeId, imageUrl)
-        .then(async (saved) => {
-          try {
-            if (await isDbAvailable()) {
-              const { saveImagePath } = await import("@/lib/db/nodes");
-              const { logUsage } = await import("@/lib/db/usage");
-              await saveImagePath(nodeId, saved.relativePath, imageModel);
-              await logUsage({
-                nodeId,
-                action: "generate-image",
-                model: imageModel,
-                prompt_tokens: usage.prompt_tokens,
-                completion_tokens: usage.completion_tokens,
-                total_tokens: usage.total_tokens,
-              });
-            }
-          } catch (err) {
-            console.warn("[DB] Failed to persist image metadata:", err);
-          }
-        })
-        .catch((err: unknown) => console.warn("[Image] Failed to save to disk:", err));
     }
 
     return NextResponse.json({ imageUrl, _debug: debugInfo });

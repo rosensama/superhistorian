@@ -2,7 +2,7 @@
 
 An AI-driven interactive history explorer. Navigate all of human (and Earth) history through an infinitely zoomable, fractal timeline. Each click splits a historical period into sub-periods or geographic regions, generated on-demand by an LLM. The result is a lazily-generated tree that grows as you explore.
 
-> This is a fork of [mafux777/superhistorian](https://github.com/mafux777/superhistorian). It adds a shared-password gate, select-to-define, editable prompt styles, remembered preferences, a Docker image for self-hosting, and an upgrade to Next.js 16, React 19 and Tailwind CSS 4.
+> This is a fork of [mafux777/superhistorian](https://github.com/mafux777/superhistorian). It adds a shared-password gate, select-to-define, editable prompt styles, remembered preferences, a Docker image for self-hosting, and an upgrade to Next.js 16, React 19 and Tailwind CSS 4. It also drops the upstream SurrealDB layer, which only ever wrote data and never read it back.
 
 ![Super Historian screenshot](screenshot.png)
 
@@ -25,7 +25,6 @@ It also works for **fictional universes**. Search for "Star Trek", "Star Wars", 
 - **Multi-language** -- output in English, French, German, Spanish, or Bahasa Indonesia
 - **Model selector** -- choose any text or image model available on OpenRouter, with price comparison bars
 - **Debug panel** -- live progress bars for all LLM calls, with timing, token counts, and cost tracking
-- **Persistence** -- optional SurrealDB backend to store the exploration tree, essays, images, and token usage
 - **Select-to-define** -- select a word or phrase in any summary or essay and click Define for a short definition in context; defined terms stay highlighted
 - **Editable prompt styles** -- the Prompts page lets you rewrite the essay and definition instructions, with a preview of the assembled prompt
 - **Remembered preferences** -- text model, image model, language, turbo mode and prompt styles are saved in the browser; a ✦ marks any setting that differs from the default, with one-click reset
@@ -74,30 +73,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000), enter the site password, then explore.
 
-The app works with the default model (`openai/gpt-5-nano`). No database setup required -- persistence is optional.
-
-## Optional: Persistence with SurrealDB
-
-If you want to persist your exploration tree, essays, images, and track token usage across sessions:
-
-### Install SurrealDB
-
-```bash
-# macOS
-brew install surrealdb/tap/surreal
-
-# Or see https://surrealdb.com/install for other platforms
-```
-
-### Start SurrealDB
-
-```bash
-surreal start --user root --pass root surrealkv:data/superhistorian.db
-```
-
-The app auto-detects SurrealDB on `localhost:8000` and persists data. If SurrealDB isn't running, the app works normally -- just without persistence.
-
-Generated images are saved to `data/images/` on disk.
+The app works with the default model (`openai/gpt-5-nano`). There is no database: the exploration tree lives in the browser tab and resets on reload, while your preferences are saved in the browser.
 
 ## Self-hosting with Docker
 
@@ -108,11 +84,10 @@ docker build -f docker/Dockerfile -t superhistorian .
 docker run -p 3000:3000 \
   -e SITE_PASSWORD=pick-a-shared-password \
   -e OPENROUTER_API_KEY=sk-or-v1-your-key-here \
-  -v "$PWD/data/images:/app/data/images" \
   superhistorian
 ```
 
-Mount `/app/data/images` to keep generated images across container restarts. SurrealDB is not bundled; set the `SURREAL_*` variables to point at your own instance if you want persistence.
+The container is stateless, so no volumes are needed.
 
 ### Releases
 
@@ -134,11 +109,6 @@ All configuration is done through environment variables (`.env.local` in develop
 | `SITE_PASSWORD` | (required) | Shared password; unset = site locked. Rotate to kick everyone. |
 | `OPENROUTER_MODEL` | `openai/gpt-5-nano` | Default text model |
 | `OPENROUTER_IMAGE_MODEL` | `google/gemini-3.1-flash-image` | Default image model (Nano Banana 2) |
-| `SURREAL_URL` | `http://127.0.0.1:8000` | SurrealDB connection URL |
-| `SURREAL_USER` | `root` | SurrealDB username |
-| `SURREAL_PASS` | `root` | SurrealDB password |
-| `SURREAL_NS` | `superhistorian` | SurrealDB namespace |
-| `SURREAL_DB` | `main` | SurrealDB database |
 
 Models can also be changed at runtime using the dropdown selectors in the app header. Those choices are remembered per browser.
 
@@ -164,7 +134,6 @@ Linting uses `typescript-eslint`'s `strict-type-checked` and `stylistic-type-che
 | State | Zustand 5 |
 | Animation | Framer Motion 13 |
 | LLM | OpenRouter (any model) |
-| Database | SurrealDB (optional) |
 | Linting | ESLint 9 + typescript-eslint (strict, type-checked) |
 | Testing | `node:test` (unit), Playwright (end-to-end) |
 
@@ -178,7 +147,6 @@ src/
     api/
       explore/          -- LLM proxy for splits, essays, search, definitions
       generate-image/   -- Image/map generation
-      images/[nodeId]/  -- Serve saved images from disk
       login/            -- Check the site password, set the session cookie
       models/           -- List available OpenRouter models
     login/              -- Password page
@@ -210,12 +178,6 @@ src/
     site-auth.ts        -- Password cookie signing and checking
     map-context.ts      -- Era-appropriate map prompt styles
     mock-data.ts        -- Canned responses when no API key is set
-    db/
-      client.ts         -- SurrealDB connection singleton
-      schema.ts         -- Table definitions
-      nodes.ts          -- Node CRUD operations
-      images.ts         -- Image save/load (filesystem)
-      usage.ts          -- Token usage logging
 ```
 
 ## License

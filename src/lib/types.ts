@@ -45,6 +45,12 @@ export interface DefineResponse {
   definition: string;
 }
 
+export interface LlmUsageData {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
 export interface DebugEntry {
   id: string;
   timestamp: number;

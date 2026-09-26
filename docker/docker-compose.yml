@@ -15,5 +15,3 @@ services:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-}
       OPENROUTER_IMAGE_MODEL: ${OPENROUTER_IMAGE_MODEL:-}
-    volumes:
-      - /sites/superhistorian/data/images:/app/data/images

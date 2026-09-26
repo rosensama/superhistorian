@@ -67,7 +67,6 @@ export function generateImage(cacheKey: string, contextText: string) {
         body: JSON.stringify({
           context: contextText,
           model: useHistorianStore.getState().selectedImageModel,
-          nodeId: cacheKey.replace(/^node-/, ""),
         }),
         signal: controller.signal,
       });
