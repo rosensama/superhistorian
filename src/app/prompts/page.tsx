@@ -67,7 +67,7 @@ function PromptStyleEditor({
             <button
               type="button"
               onClick={onReset}
-              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm bg-red-600 text-white text-[9px] leading-none hover:bg-red-700"
+              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-xs bg-red-600 text-white text-[9px] leading-none hover:bg-red-700"
               aria-label="Reset to default"
               title="Reset to default"
             >
@@ -92,7 +92,7 @@ function PromptStyleEditor({
           id={`style-${prefKey}`}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          className={`w-full min-h-[12rem] resize-y rounded-lg border px-3 py-2 text-sm font-mono text-ink bg-white ${
+          className={`w-full min-h-48 resize-y rounded-lg border px-3 py-2 text-sm font-mono text-ink bg-white ${
             overridden ? "border-navy/50 ring-1 ring-navy/25 bg-navy/5" : "border-sepia/30"
           }`}
           spellCheck={false}
@@ -161,8 +161,8 @@ export default function PromptsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-parchment via-parchment to-amber-50/50">
-      <header className="border-b border-sepia/15 bg-parchment/80 backdrop-blur sticky top-0 z-10">
+    <div className="min-h-screen bg-linear-to-b from-parchment via-parchment to-amber-50/50">
+      <header className="border-b border-sepia/15 bg-parchment/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-2xl font-bold text-ink">Prompt styles</h1>

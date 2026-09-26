@@ -159,7 +159,7 @@ export default function DefinableText({ text, node, className }: DefinableTextPr
               setOpenNorm(seg.norm);
               clearPending();
             }}
-            className="defined-term bg-brass/15 border-b border-dotted border-brass/70 text-ink px-0.5 rounded-sm hover:bg-brass/25 cursor-pointer"
+            className="defined-term bg-brass/15 border-b border-dotted border-brass/70 text-ink px-0.5 rounded-xs hover:bg-brass/25 cursor-pointer"
             title="Show definition"
           >
             {seg.value}
@@ -186,7 +186,7 @@ export default function DefinableText({ text, node, className }: DefinableTextPr
               : `Define “${pending.term.slice(0, 24)}${pending.term.length > 24 ? "…" : ""}”`}
           </button>
           {error && (
-            <p className="mt-1 text-[11px] text-crimson font-serif bg-white/90 px-2 py-1 rounded">
+            <p className="mt-1 text-[11px] text-crimson font-serif bg-white/90 px-2 py-1 rounded-sm">
               {error}
             </p>
           )}

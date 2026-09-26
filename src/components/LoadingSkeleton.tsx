@@ -15,15 +15,15 @@ export default function LoadingSkeleton() {
         >
           <div className="flex gap-2">
             <div className="h-5 w-16 bg-sepia/10 rounded-full animate-pulse" />
-            <div className="h-5 w-4 bg-sepia/5 rounded" />
+            <div className="h-5 w-4 bg-sepia/5 rounded-sm" />
             <div className="h-5 w-16 bg-sepia/10 rounded-full animate-pulse" />
           </div>
-          <div className="h-6 w-3/4 bg-sepia/15 rounded animate-pulse" />
-          <div className="h-4 w-1/3 bg-sepia/10 rounded animate-pulse" />
+          <div className="h-6 w-3/4 bg-sepia/15 rounded-sm animate-pulse" />
+          <div className="h-4 w-1/3 bg-sepia/10 rounded-sm animate-pulse" />
           <div className="space-y-2">
-            <div className="h-3 w-full bg-sepia/10 rounded animate-pulse" />
-            <div className="h-3 w-5/6 bg-sepia/10 rounded animate-pulse" />
-            <div className="h-3 w-4/6 bg-sepia/10 rounded animate-pulse" />
+            <div className="h-3 w-full bg-sepia/10 rounded-sm animate-pulse" />
+            <div className="h-3 w-5/6 bg-sepia/10 rounded-sm animate-pulse" />
+            <div className="h-3 w-4/6 bg-sepia/10 rounded-sm animate-pulse" />
           </div>
           <div className="flex gap-2 pt-2">
             <div className="h-8 flex-1 bg-navy/10 rounded-lg animate-pulse" />

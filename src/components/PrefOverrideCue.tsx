@@ -34,7 +34,7 @@ export function PrefOverrideCue({ prefKey }: { prefKey: ChromePrefKey }) {
           e.stopPropagation();
           resetClientPref(prefKey);
         }}
-        className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm bg-red-600 text-white text-[9px] leading-none hover:bg-red-700"
+        className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-xs bg-red-600 text-white text-[9px] leading-none hover:bg-red-700"
         aria-label="Reset to default"
         title="Reset to default"
       >

@@ -111,7 +111,7 @@ function ExplorationLevel({
 
         return (
           <div className="mb-4">
-            <div className="bg-white/70 backdrop-blur border-2 border-sepia/20 rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-white/70 backdrop-blur-sm border-2 border-sepia/20 rounded-2xl overflow-hidden shadow-xs">
               {/* Large image + map banners (if available) */}
               {(nodeImage || nodeMap) && (
                 <div className={`flex gap-0 ${nodeImage && nodeMap ? "" : ""}`}>
@@ -607,11 +607,11 @@ export default function Explorer() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-parchment via-parchment to-amber-50/50"
+      className="min-h-screen bg-linear-to-b from-parchment via-parchment to-amber-50/50"
       style={{ paddingBottom: showDebug ? debugPanelHeight + 40 : 0 }}
     >
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-parchment/90 backdrop-blur-md border-b border-sepia/10 shadow-sm">
+      <header className="sticky top-0 z-40 bg-parchment/90 backdrop-blur-md border-b border-sepia/10 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4 mb-3">
             <h1
@@ -619,7 +619,7 @@ export default function Explorer() {
               onClick={() => navigateTo("root")}
             >
               <span className="text-3xl">📚</span>
-              <span className="bg-gradient-to-r from-ink to-sepia bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-ink to-sepia bg-clip-text text-transparent">
                 Super Historian
               </span>
             </h1>

@@ -100,7 +100,7 @@ export default function ImagePlaceholder({ contextText, cacheKey, compact, title
     return (
       <>
         <div
-          className={`relative rounded-xl overflow-hidden border border-sepia/20 shadow-sm cursor-pointer hover:shadow-md transition-shadow group ${compact ? "my-4" : "my-3"}`}
+          className={`relative rounded-xl overflow-hidden border border-sepia/20 shadow-xs cursor-pointer hover:shadow-md transition-shadow group ${compact ? "my-4" : "my-3"}`}
           onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- generated data URLs; next/image optimization does not apply */}

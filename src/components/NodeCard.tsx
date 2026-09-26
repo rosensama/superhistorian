@@ -93,7 +93,7 @@ export default function NodeCard({ node, index, onSplitTime, onSplitGeo, onDrill
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ delay: index * 0.06, type: "spring", stiffness: 200, damping: 20 }}
         whileHover={{ y: -3, transition: { duration: 0.15 } }}
-        className={`bg-gradient-to-br ${colorClass} border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md group relative ${
+        className={`bg-linear-to-br ${colorClass} border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 shadow-xs hover:shadow-md group relative ${
           isSelected ? "ring-2 ring-ink/20 shadow-md" : ""
         }`}
         onClick={() => onDrillDown(node)}
@@ -204,35 +204,35 @@ export default function NodeCard({ node, index, onSplitTime, onSplitGeo, onDrill
           <button
             onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); onSplitTime(node); }}
             disabled={isLoading}
-            className="px-2 py-1.5 bg-navy text-white text-[11px] font-semibold rounded-lg hover:bg-navy/80 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
+            className="px-2 py-1.5 bg-navy text-white text-[11px] font-semibold rounded-lg hover:bg-navy/80 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-xs"
           >
             ⏳ Time
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); onSplitGeo(node); }}
             disabled={isLoading}
-            className="px-2 py-1.5 bg-crimson text-white text-[11px] font-semibold rounded-lg hover:bg-crimson/80 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
+            className="px-2 py-1.5 bg-crimson text-white text-[11px] font-semibold rounded-lg hover:bg-crimson/80 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-xs"
           >
             🗺️ Geo
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); onEssay(node); }}
             disabled={isLoading}
-            className="px-2 py-1.5 bg-sepia text-parchment text-[11px] font-semibold rounded-lg hover:bg-brass transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
+            className="px-2 py-1.5 bg-sepia text-parchment text-[11px] font-semibold rounded-lg hover:bg-brass transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-xs"
           >
             📝 Essay
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); generateImage(`node-${node.id}`, imageContext); }}
             disabled={isLoading || isGeneratingImage}
-            className="px-2 py-1.5 bg-violet-600 text-white text-[11px] font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
+            className="px-2 py-1.5 bg-violet-600 text-white text-[11px] font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-xs"
           >
             {isGeneratingImage ? "🎨 ..." : existingImage ? "🎨 Redo" : "🎨 Image"}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEnsureSelected(node); generateImage(`map-${node.id}`, mapContext); }}
             disabled={isLoading || isGeneratingMap}
-            className="px-2 py-1.5 bg-teal-700 text-white text-[11px] font-semibold rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-sm"
+            className="px-2 py-1.5 bg-teal-700 text-white text-[11px] font-semibold rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 shadow-xs"
           >
             {isGeneratingMap ? "🗺️ ..." : existingMap ? "🗺️ Redo" : "🗺️ Map"}
           </button>

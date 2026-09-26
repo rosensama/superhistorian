@@ -53,14 +53,14 @@ export default function SearchBar() {
 
   return (
     <form onSubmit={(e) => void handleSearch(e)} className="relative">
-      <div className="flex items-center bg-white/80 backdrop-blur border-2 border-sepia/20 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow focus-within:border-sepia/50 focus-within:shadow-md">
+      <div className="flex items-center bg-white/80 backdrop-blur-sm border-2 border-sepia/20 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-shadow focus-within:border-sepia/50 focus-within:shadow-md">
         <span className="pl-4 text-sepia/60 text-lg">&#x1F50D;</span>
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder='Jump to a topic... (e.g. "Roman Empire", "Silk Road")'
-          className="w-full px-3 py-3 bg-transparent outline-none text-ink font-serif placeholder:text-sepia/40 text-sm sm:text-base"
+          className="w-full px-3 py-3 bg-transparent outline-hidden text-ink font-serif placeholder:text-sepia/40 text-sm sm:text-base"
         />
         <button
           type="submit"

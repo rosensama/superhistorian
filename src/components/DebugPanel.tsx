@@ -53,17 +53,17 @@ function DebugRow({ entry }: { entry: DebugEntry }) {
         <span className="text-[10px] font-mono text-white/30 shrink-0 w-[26px] text-right tabular-nums">
           {entry.nodeDepth >= 0 ? `L${String(entry.nodeDepth).padStart(2, "0")}` : ""}
         </span>
-        <span className={`${style.bg} ${style.text} px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 min-w-[52px] text-center`}>
+        <span className={`${style.bg} ${style.text} px-1.5 py-0.5 rounded-sm text-[10px] font-bold shrink-0 min-w-[52px] text-center`}>
           {style.label}
         </span>
 
         {/* Progress bar — fixed scale: 0 to 90s, always proportional */}
-        <div className="flex-1 h-5 bg-white/5 rounded overflow-hidden relative min-w-[120px]">
+        <div className="flex-1 h-5 bg-white/5 rounded-sm overflow-hidden relative min-w-[120px]">
           {/* Scale markers at 30s and 60s */}
           <div className="absolute top-0 bottom-0 left-[33.3%] w-px bg-white/5" />
           <div className="absolute top-0 bottom-0 left-[66.6%] w-px bg-white/5" />
           <div
-            className={`h-full transition-all duration-200 bg-gradient-to-r ${
+            className={`h-full transition-all duration-200 bg-linear-to-r ${
               entry.error ? "from-red-500/50 to-red-400/30" :
               isInFlight ? style.barColor :
               "from-emerald-500/40 to-emerald-400/20"
@@ -108,7 +108,7 @@ function DebugRow({ entry }: { entry: DebugEntry }) {
         {/* Prompt */}
         <div>
           <div className="text-[10px] font-bold text-white/30 uppercase mb-0.5">Prompt</div>
-          <pre className="text-[11px] text-white/70 whitespace-pre-wrap bg-white/5 rounded p-2 max-h-32 overflow-y-auto">
+          <pre className="text-[11px] text-white/70 whitespace-pre-wrap bg-white/5 rounded-sm p-2 max-h-32 overflow-y-auto">
             {entry.prompt}
           </pre>
         </div>
@@ -117,7 +117,7 @@ function DebugRow({ entry }: { entry: DebugEntry }) {
         {entry.response && (
           <div>
             <div className="text-[10px] font-bold text-white/30 uppercase mb-0.5">Response</div>
-            <div className="bg-white/5 rounded p-2 overflow-x-auto">
+            <div className="bg-white/5 rounded-sm p-2 overflow-x-auto">
               <ResponseTable response={entry.response} />
             </div>
           </div>
@@ -125,7 +125,7 @@ function DebugRow({ entry }: { entry: DebugEntry }) {
 
         {/* Error */}
         {entry.error && (
-          <div className="text-[11px] text-red-300 bg-red-500/10 rounded p-2">
+          <div className="text-[11px] text-red-300 bg-red-500/10 rounded-sm p-2">
             {entry.error}
           </div>
         )}

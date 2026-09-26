@@ -110,7 +110,7 @@ export default function ImageModelSelector() {
                   <div className="mt-1.5 flex items-center gap-2">
                     <div className="flex-1 h-3 bg-sepia/5 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-violet-400 to-pink-400 rounded-full"
+                        className="h-full bg-linear-to-r from-violet-400 to-pink-400 rounded-full"
                         style={{ width: `${barWidth}%` }}
                       />
                     </div>

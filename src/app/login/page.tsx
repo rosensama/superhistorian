@@ -45,7 +45,7 @@ function LoginForm() {
           autoFocus
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-sepia/30 bg-white/80 px-3 py-2 font-serif text-ink outline-none focus:border-sepia"
+          className="mt-1 w-full rounded-lg border border-sepia/30 bg-white/80 px-3 py-2 font-serif text-ink outline-hidden focus:border-sepia"
         />
       </label>
       {error && <p className="text-sm text-crimson font-serif">{error}</p>}
@@ -62,7 +62,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-parchment via-parchment to-amber-50/50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-linear-to-b from-parchment via-parchment to-amber-50/50 flex flex-col items-center justify-center px-4">
       <h1 className="font-display text-3xl font-bold text-ink mb-2">Super Historian</h1>
       <p className="font-serif text-sm text-ink/60 mb-8">Enter the site password to continue.</p>
       <Suspense fallback={null}>
