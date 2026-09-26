@@ -162,3 +162,5 @@ src/
 ## License
 
 MIT
+
+The app icon is rendered from the 📚 emoji in [Noto Emoji](https://github.com/googlefonts/noto-emoji) by Google, used under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
