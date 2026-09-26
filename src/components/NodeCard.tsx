@@ -58,15 +58,16 @@ export default function NodeCard({ node, index, onSplitTime, onSplitGeo, onDrill
   const [mapLightboxOpen, setMapLightboxOpen] = useState(false);
 
   // Tick for elapsed time
-  const [, setTick] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!turboMode) return;
-    const timer = setInterval(() => setTick((t) => t + 1), 1000);
+    const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [turboMode]);
 
+  // `now` lags by up to one tick, so clamp a just-started prefetch to 0s
   const elapsedSec = prefetching?.startedAt
-    ? Math.floor((Date.now() - prefetching.startedAt) / 1000)
+    ? Math.max(0, Math.floor((now - prefetching.startedAt) / 1000))
     : 0;
 
   let prefetchStatus: "none" | "queued" | "working" | "partial" | "ready" | "cancelled" = "none";

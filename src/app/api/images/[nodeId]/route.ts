@@ -3,9 +3,9 @@ import { loadImage } from "@/lib/db/images";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { nodeId: string } }
+  { params }: { params: Promise<{ nodeId: string }> }
 ) {
-  const { nodeId } = params;
+  const { nodeId } = await params;
   const image = await loadImage(nodeId);
 
   if (!image) {

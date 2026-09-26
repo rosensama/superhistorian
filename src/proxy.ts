@@ -5,7 +5,7 @@ function isPublic(pathname: string): boolean {
   return pathname === "/login" || pathname === "/api/login";
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (

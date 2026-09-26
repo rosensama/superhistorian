@@ -1,4 +1,4 @@
-/** Site password gate — Edge-safe (used from middleware). */
+/** Site password gate — Edge-safe (used from the proxy). */
 
 export const AUTH_COOKIE = "sh_auth";
 const AUTH_PAYLOAD = "superhistorian-ok";
@@ -6,7 +6,7 @@ const AUTH_PAYLOAD = "superhistorian-ok";
 function toBase64Url(buf: ArrayBuffer): string {
   const bytes = new Uint8Array(buf);
   let binary = "";
-  for (const byte of Array.from(bytes)) binary += String.fromCharCode(byte);
+  for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 

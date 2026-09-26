@@ -10,7 +10,7 @@ export default function SearchBar() {
   const [isSearching, setIsSearching] = useState(false);
   const { setTree } = useHistorianStore();
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!query.trim() || isSearching) return;
 

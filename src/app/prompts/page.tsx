@@ -40,11 +40,14 @@ function PromptStyleEditor({
 }) {
   const overridden = isPromptStyleOverride(prefKey, style);
   const [draft, setDraft] = useState(style);
+  const [syncedStyle, setSyncedStyle] = useState(style);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  useEffect(() => {
+  // Adopt external changes (reset, hydration) — adjusted during render instead of in an effect
+  if (style !== syncedStyle) {
+    setSyncedStyle(style);
     setDraft(style);
-  }, [style]);
+  }
 
   useEffect(() => {
     if (draft === style) return;

@@ -27,18 +27,18 @@ function formatDuration(ms: number): string {
 }
 
 function DebugRow({ entry }: { entry: DebugEntry }) {
-  const [, setTick] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const isInFlight = !entry.completedAt && !entry.error;
 
   // Tick every 200ms to animate progress bar
   useEffect(() => {
     if (!isInFlight) return;
-    const timer = setInterval(() => setTick((t) => t + 1), 200);
+    const timer = setInterval(() => setNow(Date.now()), 200);
     return () => clearInterval(timer);
   }, [isInFlight]);
 
   const style = getStyle(entry.action);
-  const elapsed = (entry.completedAt ?? Date.now()) - entry.timestamp;
+  const elapsed = (entry.completedAt ?? now) - entry.timestamp;
   const progress = Math.min(100, (elapsed / TIMEOUT_MS) * 100);
   const duration = entry.completedAt ? entry.completedAt - entry.timestamp : elapsed;
 
