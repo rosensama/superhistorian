@@ -150,7 +150,7 @@ export const useHistorianStore = create<HistorianState>((set, get) => ({
   essayStyle: PROMPT_STYLE_DEFAULTS.essayStyle,
   defineStyle: PROMPT_STYLE_DEFAULTS.defineStyle,
   turboMode: CLIENT_PREF_DEFAULTS.turboMode,
-  lastSplitAxis: "time" as "time" | "geography",
+  lastSplitAxis: "time",
   prefetchedSplits: {},
   prefetchingNodes: {},
   cancelledNodes: {},
