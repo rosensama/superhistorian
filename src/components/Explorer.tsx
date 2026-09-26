@@ -20,6 +20,7 @@ import { initialSplits } from "@/lib/initial-splits";
 import { prefetchForNode, cancelPrefetches } from "@/lib/prefetch";
 import { buildMapContext } from "@/lib/map-context";
 import { isPromptStyleOverride } from "@/lib/client-prefs";
+import { APP_VERSION } from "@/lib/running-version";
 import { motion } from "framer-motion";
 
 // A single level in the vertical exploration thread
@@ -734,6 +735,7 @@ export default function Explorer() {
       {/* Footer */}
       <footer className="text-center py-8 text-xs text-sepia/40 font-serif">
         Super Historian — Explore the infinite depth of history
+        <span className="ml-2 font-mono" title="Running version">· {APP_VERSION}</span>
       </footer>
     </div>
   );

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AUTH_COOKIE, isValidAuthCookie, sitePassword } from "@/lib/site-auth";
 
 function isPublic(pathname: string): boolean {
-  return pathname === "/login" || pathname === "/api/login";
+  return pathname === "/login" || pathname === "/api/login" || pathname === "/api/version";
 }
 
 export async function proxy(req: NextRequest) {

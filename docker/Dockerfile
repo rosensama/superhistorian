@@ -9,6 +9,10 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public
+# Baked into the UI and /api/version; the release workflow passes the tag and commit
+ARG RELEASE_TAG=dev
+ARG RELEASE_COMMIT=unknown
+ENV RELEASE_TAG=$RELEASE_TAG RELEASE_COMMIT=$RELEASE_COMMIT
 RUN npm run build
 
 FROM base AS runner

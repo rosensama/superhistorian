@@ -80,7 +80,7 @@ The app works with the default model (`openai/gpt-5-nano`). There is no database
 `docker/Dockerfile` builds a Next.js standalone image (Node 24 Alpine, runs as a non-root user). Secrets are never baked in; pass them as environment variables at runtime.
 
 ```bash
-docker build -f docker/Dockerfile -t superhistorian .
+docker build -f docker/Dockerfile --build-arg RELEASE_COMMIT=$(git rev-parse HEAD) -t superhistorian .
 docker run -p 3000:3000 \
   -e SITE_PASSWORD=pick-a-shared-password \
   -e OPENROUTER_API_KEY=sk-or-v1-your-key-here \
@@ -98,6 +98,8 @@ git tag v0.2.0 && git push origin v0.2.0
 ```
 
 `docker/docker-compose.yml` is a reference copy of the Portainer stack that runs the published image.
+
+The running version appears in the page footer and at `/api/version` (public, no password needed): the release tag for tagged builds, otherwise the short commit hash, otherwise `dev`. Local `npm run dev` and `npm run build` read it from git.
 
 ## Configuration
 
@@ -149,6 +151,7 @@ src/
       generate-image/   -- Image/map generation
       login/            -- Check the site password, set the session cookie
       models/           -- List available OpenRouter models
+      version/          -- Running version (tag or commit hash)
     login/              -- Password page
     prompts/            -- Edit essay and definition prompt styles
     favicon.ico, icon.png, apple-icon.png -- App icons
@@ -178,6 +181,7 @@ src/
     site-auth.ts        -- Password cookie signing and checking
     map-context.ts      -- Era-appropriate map prompt styles
     mock-data.ts        -- Canned responses when no API key is set
+    app-version.mjs     -- Pick the version to display (tag, else hash, else "dev")
 ```
 
 ## License
