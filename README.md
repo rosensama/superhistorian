@@ -2,6 +2,8 @@
 
 An AI-driven interactive history explorer. Navigate all of human (and Earth) history through an infinitely zoomable, fractal timeline. Each click splits a historical period into sub-periods or geographic regions, generated on-demand by an LLM. The result is a lazily-generated tree that grows as you explore.
 
+> This is a fork of [mafux777/superhistorian](https://github.com/mafux777/superhistorian). It adds a shared-password gate, select-to-define, editable prompt styles, remembered preferences, a Docker image for self-hosting, and an upgrade to Next.js 16, React 19 and Tailwind CSS 4.
+
 ![Super Historian screenshot](screenshot.png)
 
 ## Concept
@@ -17,25 +19,29 @@ It also works for **fictional universes**. Search for "Star Trek", "Star Wars", 
 - **Fractal exploration** -- split any card by time (3-6 sub-periods) or geography (3-6 sub-regions), recursively to any depth
 - **Turbo mode** -- pre-fetches both time and geo splits for all visible cards so the next click is instant
 - **Search** -- jump to any topic; it becomes a new tree root
-- **Essays** -- generate a 350-word essay for any card, displayed inline
+- **Essays** -- generate a ~350-word encyclopedia-style essay for any card, displayed inline
 - **Illustrations** -- generate historical images for any card using an image model
 - **Maps** -- generate period-accurate historical maps with political boundaries and trade routes
 - **Multi-language** -- output in English, French, German, Spanish, or Bahasa Indonesia
 - **Model selector** -- choose any text or image model available on OpenRouter, with price comparison bars
 - **Debug panel** -- live progress bars for all LLM calls, with timing, token counts, and cost tracking
 - **Persistence** -- optional SurrealDB backend to store the exploration tree, essays, images, and token usage
+- **Select-to-define** -- select a word or phrase in any summary or essay and click Define for a short definition in context; defined terms stay highlighted
+- **Editable prompt styles** -- the Prompts page lets you rewrite the essay and definition instructions, with a preview of the assembled prompt
+- **Remembered preferences** -- text model, image model, language, turbo mode and prompt styles are saved in the browser; a ✦ marks any setting that differs from the default, with one-click reset
+- **Password gate** -- one shared password protects the pages and API, so your OpenRouter credits stay private
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20.9+ (the Docker image uses Node 24)
 - An [OpenRouter](https://openrouter.ai/) API key
 
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/mafux777/superhistorian.git
+git clone https://github.com/rosensama/superhistorian.git
 cd superhistorian
 ```
 
@@ -93,9 +99,34 @@ The app auto-detects SurrealDB on `localhost:8000` and persists data. If Surreal
 
 Generated images are saved to `data/images/` on disk.
 
+## Self-hosting with Docker
+
+`docker/Dockerfile` builds a Next.js standalone image (Node 24 Alpine, runs as a non-root user). Secrets are never baked in; pass them as environment variables at runtime.
+
+```bash
+docker build -f docker/Dockerfile -t superhistorian .
+docker run -p 3000:3000 \
+  -e SITE_PASSWORD=pick-a-shared-password \
+  -e OPENROUTER_API_KEY=sk-or-v1-your-key-here \
+  -v "$PWD/data/images:/app/data/images" \
+  superhistorian
+```
+
+Mount `/app/data/images` to keep generated images across container restarts. SurrealDB is not bundled; set the `SURREAL_*` variables to point at your own instance if you want persistence.
+
+### Releases
+
+Pushing a `vX.Y.Z` tag on a commit that is on `main` runs the **Release image** workflow (`.github/workflows/release-image.yml`). It builds the image, pushes `ghcr.io/<owner>/superhistorian:vX.Y.Z`, and creates a GitHub Release.
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+`docker/docker-compose.yml` is a reference copy of the Portainer stack that runs the published image.
+
 ## Configuration
 
-All configuration is done through `.env.local`:
+All configuration is done through environment variables (`.env.local` in development):
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -106,32 +137,53 @@ All configuration is done through `.env.local`:
 | `SURREAL_URL` | `http://127.0.0.1:8000` | SurrealDB connection URL |
 | `SURREAL_USER` | `root` | SurrealDB username |
 | `SURREAL_PASS` | `root` | SurrealDB password |
+| `SURREAL_NS` | `superhistorian` | SurrealDB namespace |
+| `SURREAL_DB` | `main` | SurrealDB database |
 
-Models can also be changed at runtime using the dropdown selectors in the app header.
+Models can also be changed at runtime using the dropdown selectors in the app header. Those choices are remembered per browser.
+
+## Development
+
+| Command | What it does |
+|---------|--------------|
+| `npm run dev` | Dev server with Turbopack on port 3000 |
+| `npm run lint` | ESLint (strict, type-checked) |
+| `npm test` | Unit tests (`node:test`, `src/__tests__/`) |
+| `npm run build` | Lint, then production build (fails on any lint error) |
+
+Linting uses `typescript-eslint`'s `strict-type-checked` and `stylistic-type-checked` presets, and `tsconfig.json` enables `noUncheckedIndexedAccess`. Any rule exception is documented where it is made, in `eslint.config.mjs` or next to an inline `eslint-disable` comment.
 
 ## Tech Stack
 
 | Layer | Choice |
 |-------|--------|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| State | Zustand |
-| Animation | Framer Motion |
+| Framework | Next.js 16 (App Router, Turbopack) |
+| UI | React 19 |
+| Language | TypeScript 6 (strict) |
+| Styling | Tailwind CSS 4 |
+| State | Zustand 5 |
+| Animation | Framer Motion 13 |
 | LLM | OpenRouter (any model) |
 | Database | SurrealDB (optional) |
-| Testing | Playwright |
+| Linting | ESLint 9 + typescript-eslint (strict, type-checked) |
+| Testing | `node:test` (unit), Playwright (end-to-end) |
 
 ## Project Structure
 
 ```
+docker/                 -- Dockerfile and reference Portainer stack
 src/
+  proxy.ts              -- Password gate for pages and API (Next.js proxy)
   app/
     api/
-      explore/          -- LLM proxy for splits, essays, search
+      explore/          -- LLM proxy for splits, essays, search, definitions
       generate-image/   -- Image/map generation
       images/[nodeId]/  -- Serve saved images from disk
+      login/            -- Check the site password, set the session cookie
       models/           -- List available OpenRouter models
+    login/              -- Password page
+    prompts/            -- Edit essay and definition prompt styles
+    favicon.ico, icon.png, apple-icon.png -- App icons
   components/
     Explorer.tsx        -- Main app: vertical thread navigation
     NodeCard.tsx        -- Compact card with action buttons
@@ -143,6 +195,8 @@ src/
     LanguageSelector    -- Output language picker
     ImagePlaceholder    -- Image generation + lightbox
     ImageLightbox.tsx   -- Full-resolution image viewer
+    DefinableText.tsx   -- Select-to-define on summaries and essays
+    PrefOverrideCue.tsx -- ✦ marker and reset for non-default settings
   lib/
     store.ts            -- Zustand state (tree, prefetch, debug, essays, images)
     types.ts            -- TypeScript interfaces
@@ -151,6 +205,11 @@ src/
     prefetch.ts         -- Turbo mode prefetch queue with cancellation
     initial-splits.ts   -- Pre-loaded root splits in 5 languages
     slim-node.ts        -- Strip children before API calls
+    client-prefs.ts     -- Browser-saved preferences (override-only)
+    define-text.ts      -- Term normalization and highlighting for definitions
+    site-auth.ts        -- Password cookie signing and checking
+    map-context.ts      -- Era-appropriate map prompt styles
+    mock-data.ts        -- Canned responses when no API key is set
     db/
       client.ts         -- SurrealDB connection singleton
       schema.ts         -- Table definitions
